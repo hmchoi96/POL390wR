@@ -1,0 +1,334 @@
+---
+title: "POL390 Data Wrangling with the `dplyr` Package"
+author: "Isadora Borges Monroy"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+# Getting Started
+We'll practice using dplyr, from the tidyverse universe of functions, as an alternative, more readable way of coding. The package is especially helpful in preparing data, which is called data wrangling. Yeehaw, let's go! 
+
+install.packages("tidyverse", dependencies = TRUE)
+First, install and load the package tidyverse. You only need to install it once, but you need to call the library every time you open R.
+```{r}
+# Load the same data as last time
+getwd()
+setwd("/Users/hyunmyungchoi/study_R/POL390")
+
+#load tidyverse, which contains dplyr package
+#install.packages("tidyverse")
+library(tidyverse)
+#install.packages("janitor") #optional, install janitor too for an alternative summarizing tool
+library(janitor)
+
+#Notice the difference in read csv functions
+# Previously used: dat <- read.csv("anes_timeseries_2020/anes_timeseries_2020_csv_20220210.csv")
+dat <- read_csv("anes_timeseries_2020_csv_20220210.csv") #If this doesn't work your tidyverse library didn't load
+
+head(dat)
+dim(dat)
+# str(dat)
+
+
+```
+
+Before we get started ...
+#This is a pipe %>% 
+you should read it like "do with left of pipe something at the right hand side of the pipe" 
+OR "the left hand side is the input data, the right hand side the output of the pipe"
+
+```{r Pipe}
+
+#Practice typing it out using the shortcuts Ctrl+Shift+M or CMD if you're on a MAC
+# %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% %>% 
+
+```
+
+#Selecting to constrain our datasets
+Tidyverse/Dplyr uses a slightly different grammar.
+## These functions subset a dataset:
+* `select` - selects a subset variables (columns) from a data set.
+* `filter` - selects a subset of cases (rows) from a data set based on their values.
+
+Instead of subsetting using many `[ ]`, we will select several columns we want to keep from the dat dataset into a mini dataset
+```{r Subset the dataset using dplyr}
+#Previously, you worked on Trump vote. That is variable V202073: VoteTrump <- dat$V202073
+#Instead, we can select many variables at once. Let's select 2020 vote choice, 2016 vote choice, racial identity and authoritarianism; Joe Biden feeling thermometer, Trump thermometer
+minidat <- dat %>% select(V202073, V201103, V201549x, V201151, V201152) 
+glimpse(minidat)
+```
+
+## To modify a dataset
+we will use some of these functions 
+* `rename` - give a variable a new name.
+* `recode` - change variable labels or values.
+* `arrange` - sorts the current data set.
+* `mutate` - create a new variable at current level.
+
+*use `if_else` for binary recodes, `case_when` for very complex recodes.
+
+## Recode
+```{r prof-bar}
+# Remember to check your variables
+table(minidat$V202073)
+# Alternatively, pipe it!
+minidat$V202073 %>% table()
+
+#Let's rename the variables first 
+# The format for rename is New name = old name. Don't worry, you don't have to memorize it. Use ?rename to read the help file for a reminder, or press your tab key when you type the function
+
+#We can do many renames at the same time
+minidat <- minidat %>% rename(Vote2020 = V202073, Vote2016 = V201103, 
+                              race = V201549x, FeelingBiden = V201151, 
+                              FeelingTrump = V201152)
+
+glimpse(minidat)
+
+#Now let's recode the variables.
+#Recode has the opposite order, which the tidyverse people are self consious of. It is old name = new name
+# Recode V202073 POST: FOR WHOM DID R VOTE FOR PRESIDENT, #1. Joe Biden, 2. Donald Trump
+?recode
+minidat$Vote2020 %>% table()
+minidat$Vote2020 %>% recode("1" = "Biden", "2" = "Trump",
+                              .default = NA_character_)
+#What happened? We need to remember to assign our pipe
+minidat$Vote2020 <- minidat$Vote2020 %>% recode("1" = "Biden", "2" = "Trump",
+                              .default = NA_character_) #all the other candidates don't matter to us.
+
+glimpse(minidat) #chr 
+#let's turn it into a factor
+minidat$Vote2020 <- minidat$Vote2020 %>% as_factor() #as_factor instead of as.factor works the same but keeps the factors ordered how they are created.
+
+#You can also link pipes together. For example, if you ran this instead:
+#minidat$Vote2020 <- minidat$Vote2020 %>% recode("1" = "Biden", "2" = "Trump",
+ #                             .default = NA_character_)  %>% as_factor()
+#But don't run this because you have already recoded so if it can't find a 1 or 2 it will turn all into NA
+
+#We can also recode as factor in the pipe using the recode_factor version. Let's recode the 2016 Trump vote, where 1 is now HClinton.
+minidat$Vote2016 <- minidat$Vote2016 %>% recode_factor("1" = "HClinton", "2" = "Trump",
+                              .default = NA_character_) #all the other candidates don't matter to us.
+  
+glimpse(minidat) #Check your changes are saving.
+```
+
+
+Let's recode race, where we have more than two categories that we do care about. 
+Q: I am going to read you a list of five race categories. You may choose one or more races. For this survey, Hispanic origin is not a race. Are you White; Black or African American; American Indian or Alaska Native; Asian; or Native Hawaiian or Other Pacific Islander? Variable V201549x summarizes the responses: -9. Refused and -8. Don’t know 
+1. White, non-Hispanic 2. Black, non-Hispanic 3. Hispanic 4. Asian or Native Hawaiian/other Pacific Islander, non-Hispanic alone 5. Native American/Alaska Native or other race, non-Hispanic alone 6. Multiple races, non-Hispanic 
+
+```{r}
+#recode here
+minidat$race <- minidat$race %>% recode_factor("1" = "white",
+                                               "2" = "Black",
+                                               "3" = "Hispanic",
+                                               "4" = "AANHPI",
+                                               "5" = "Indigenous",
+                                               "6" = "Multiple categories",
+                                               .default = NA_character_)
+glimpse(minidat)
+```
+
+
+#Try recoding the race variable on your own
+
+```{r}
+
+#Now, let's recode the feeling thermometers, where respondents rate Biden and Trump.
+minidat$FeelingBiden %>% summary() 
+
+#Note the unusual values. 
+#From the codebook: 998. Don’t know (don’t know where to rate), -9. Refused and -4. Technical error
+if_else(minidat$FeelingBiden < 0 | minidat$FeelingBiden > 100, true= NA_real_, false = minidat$FeelingBiden)%>% summary()
+
+
+#this looks better. 
+#Let's assign that code to itself, remember to take out the summary pipe 
+minidat$FeelingBiden <- if_else(minidat$FeelingBiden<0 | minidat$FeelingBiden>100, NA_real_, minidat$FeelingBiden)
+
+#Now look at the Trump rating. 
+ #Don't know where to rate is gone, we only have people who refuse to say! 
+minidat$FeelingTrump %>% summary()
+minidat$FeelingTrump %>%  if_else(minidat$FeelingTrump<0 | minidat$FeelingTrump>100, NA_real_, minidat$FeelingTrump) 
+glimpse(minidat)
+
+```
+
+#Can you recode so that: values under 50 are dislike, 50 and above are like, and NA values are stated as "refused", in a variable called FeelingTrump2? What do you have to do to make this happen?
+```{r}
+minidat$FeelingTrump2 <- if_else(minidat$FeelingTrump < 50, true="dislike", false="like",
+                                 missing = "refused")
+minidat$FeelingTrump2 %>% table()
+```
+
+
+#Plotting
+
+```{r Plotting}
+#library(ggplot2) #ggplot2 is part of the tidyverse so if you load tidyverse you can skip loading ggplot2 again. 
+minidat %>% ggplot(aes(x = Vote2020))+
+  geom_bar()+
+  labs(x = "2020 Vote", y = "Count")
+
+
+#add proportions with ..prop.. and group = 1 or ..count../sum(..count..)
+minidat %>% ggplot(aes(x = Vote2020, y = ..prop.., group = 1), stat = "count") + 
+  geom_bar()+
+  #scale_y_continuous(labels = scales::percent_format())+ #remove comment to add % format
+  labs(x = "2020 Vote", y = "Proportion") +
+  scale_y_continuous(labels = scales::percent_format())
+
+
+#Use the group_by to calculate averages for groups. 
+
+minidat %>% group_by(Vote2016, Vote2020) %>% 
+  summarise(average = mean_se(FeelingTrump)) %>%
+  arrange(average$y) ##order by number
+
+
+# We can plot grouped averages. 
+#For example, 2020 Vote choice by Trump 2020 rating, viewed as a point
+minidat %>% group_by(Vote2020) %>% 
+  summarise(average = mean_se(FeelingTrump)) %>%
+  arrange(average$y) %>% ggplot(aes(x = Vote2020, y = average$y))+
+  geom_point(size = 4)+
+  labs(x = "2020 Vote", y = "Average Trump rating")
+
+
+
+
+#Violin plots summarize the distribution of the variables, including the average, like the boxplots you used last week
+#They need a categorical and a numeric variable. 
+#Let's code the distribution the 2016 vote against the Trump rating, and color code by the vote
+minidat %>% ggplot(aes(x = Vote2016, y = FeelingTrump, color = Vote2016, fill = Vote2016))+
+  geom_violin() +
+  scale_color_brewer(palette="Dark2")+   ## pre-set palette
+  scale_fill_brewer(palette="Dark2")
+
+
+
+# The NA variable can be excluded several ways. You don't want to delete these respondents, you can filter them out before plotting by adding a filter pipe. 
+minidat %>% filter(!is.na(Vote2016)) %>% 
+  ggplot(aes(x = Vote2016, y = FeelingTrump, color = Vote2016, fill = Vote2016))+
+  geom_violin() +
+  scale_color_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Dark2")
+
+
+```
+# What do you conclude from this graph?
+
+
+```{r}
+#Similarly, you can use filter to focus on specific groups or values. 
+minidat$race %>% table
+minidat %>% filter(race %in% c("Black", "Hispanic", "White"))  %>%          
+  ggplot(aes(x = race, y = FeelingTrump, color = Vote2016, fill = Vote2016)) +
+  scale_color_brewer(palette="Dark2") +
+  scale_fill_brewer(palette="Dark2")
+
+#Let's focus on comparing Black and Hispanic respondents' vote choice, which is often thought as strong Democratic but which went for Trump in higher numbers than previous Republicans
+
+minidat %>% filter(race %in% c("Black", "Hispanic")) %>% 
+  ggplot(aes(x = race, y = FeelingTrump, color = Vote2016, fill = Vote2016))+
+  geom_violin() +
+  scale_color_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Dark2")
+
+```
+
+
+#Add white voters to the race filter and change the color/fill to display the 2020 vote
+```{r}
+TrumpRate <- minidat %>% filter(race %in% (Vote2020) %>% 
+  ggplot(aes(x = Vote2020, y = FeelingTrump, color = Vote2020, fill = Vote2020))+
+  geom_violin() +
+  scale_color_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Dark2")
+```
+
+#compare the two feeling thermometers.
+```{r}
+#Let's #use drop_na instead of filter this time. This time, I'm assigning it to a variable
+TrumpRate <- minidat %>% drop_na(Vote2020) %>% 
+  ggplot(aes(x = Vote2020, y = FeelingTrump, color = Vote2020, fill = Vote2020))+
+  geom_violin() +
+  scale_color_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Dark2")
+
+
+```
+
+#Now you try with FeelingBiden
+
+```{r}
+#The package cowplot lets you combine plots if you assign them as objects.
+#you'll need to install cowplot if you want to try this later.
+
+#You worked with themes last time. Let's override the legend because it is redundant
+
+
+#now we only have one, although it is still redundant because of our x-axis labels. 
+```
+
+#For complicated recodings, or recodes with multiple arguments, we need a couple functions to work together
+#Mutate creates a new variable, case_when evaluates true/false statements and fills out the variable data.
+
+```{r}
+
+#the last condition always has to be TRUE ~ and an answer. 
+    #Counterituitively, TRUE is actually False, meaning, what happens if none of the conditions above are satisfied. 
+    #We can also calculate the difference in ratings between Trump and Biden in mutate
+    #Call it `Thermometer difference`, and calculate so positive Trump<Biden, negative means Biden>Trump
+
+  #To calculate the average difference for the category of voter, use group and group_modify
+ #.x is used to tell it to use the result of the previous function (group_by(Votes))
+  
+  #group_modify(~ mean_se(.x$`Thermometer difference`) %>% abs) %>%  #we can turn the calculation into an absolute value.
+
+#Let's plot these differences using another recoding function called case_when. 
+#We can add a pipe or we can save as a table and feed it into ggplot. 
+#Pick one and try to output the plot:
+
+
+
+
+#Remember to save your work!
+#ggsave("graph example.pdf", plot = saved_object) 
+
+```
+
+Now it's your turn! 
+Remake the dataset and include the variable for authoritarianism, V202266.
+Authoritarianism has two categories of interest. Let's use if_else from the tidy version. 
+Q: Please tell me which one you think is more important for a child to have: Independence or respect for elders
+Recode the variable as a factor, labeling those who answer independence as "no" and those who answer respect for elders as "Yes"
+
+
+```{r student recode}
+
+```
+
+## Histogram in ggplot2
+Using ggplot visualize the proportion of authoritarians and non-authoritarians in the sample. 
+What does this result tell you, and does it make sense?
+Can you visualize it against another variable in our dataset, like Trump rating?
+```{r}
+
+```
+
+# Extending Your Knowledge
+What do you think of object <- function(object)? 
+Is this the most efficient way to code? Look for the phrase "compound pipe R" and see if you can change any of the code that assigned itself to use this function from the magrittr package. 
+
+
+## Multi-variable plots
+
+Ggplot2 and group_by can be combined to display several plots side by side. Using the authoritarianism variable you recoded, and the case_when code, remake it to plot, but this time, add a facet_wrap function following the format: `facet_wrap(authoritarianism~., scales = "free")+` 
+What does it do?
+Also, notice the backticks. What do they do? 
+```{r }
+
+```
+
+

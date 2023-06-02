@@ -1,0 +1,229 @@
+---
+title: "POL390 Graphing with ggplot2"
+output: pdf_document
+---
+
+# Getting Started
+First we'll practice using ggplot to create a barplot and a histogram using the same variables we used yesterday in base R. Then in the next portion of the lab you'll work on your own or in small groups to create additional graphs (without my demonstration, but I'll be around to help you).
+
+```{r}
+# Load the same data as last time
+getwd()
+setwd("/Users/hyunmyungchoi/study_R/POL390")
+library(gridExtra)
+
+dat <- read.csv("anes_timeseries_2020_csv_20220210.csv")
+
+# head(dat)
+dim(dat)
+# str(dat)
+str(dat)
+```
+
+## Barplot in ggplot 2
+First I'll demonstrate the basics (and some bells & whistles) of creating a barplot in ggplot2.
+```{r prof-bar}
+
+# Look at the data and recode
+table(dat$V202073)
+
+# Recode V202073 POST: FOR WHOM DID R VOTE FOR PRESIDENT
+dat$vote_trump <- dat$V202073
+dat$vote_trump[dat$V202073 < 0 | dat$V202073 > 2] <- NA
+dat$vote_trump[dat$V202073 == 1] <- 0
+dat$vote_trump[dat$V202073 == 2] <- 1
+
+dat$vote_trump <- as.factor(dat$vote_trump)
+table(dat$vote_trump)
+
+# install.packages("ggplot2") # install ggplot2 (only need to do once!)
+library(ggplot2) # call it from our library (must do every time)
+## it is asking what kind of graph I want to make
+# always get from ggplot
+##dat = subset -> na delete 
+## aes -> x,y axis set 
+ggplot(dat = subset(dat, !is.na(vote_trump)),
+       aes(x = vote_trump, y = (after_stat(count) / sum(after_stat(count))* 100))) +    #gives proportion
+  geom_bar(fill = "#0072B2", color = "black") +                  ## bar graph set
+  labs(x = "Candidate of Choice", y = "Proportion of Vote") +    ## x axis y axis name set
+  scale_x_discrete(labels = c("0" = "Biden", "1" = "Trump"))  +   ## change label name
+  theme(aspect.ratio = 1, # how ratio height is 
+        axis.title.x = element_text(size = 12), 
+        axis.text.x = element_text(size = 12))
+```
+
+Now it's your turn! Re-create the barplot you created yesterday but use ggplot2 this time. Play around with the functionality of ggplot2 to make to barplot prettier.
+```{r student-bar}
+# Student code here
+
+# Code here
+table(dat$V202557)
+str(dat$V202557)
+dat$isLab <- dat$V202557
+dat$isLab[dat$V202557 < 1] <- NA
+dat$isLab[dat$V202557 == 2] <- 0
+dat$isLab[dat$V202557 == 1] <- 1
+str(dat$isLab)
+summary(dat$isLab)
+dat$isLab <- factor(dat$isLab, labels = c("isn't Lab", "is Lab"), levels = c(0,1))
+## 46% is proportion of "is lab"
+table(dat$isLab)
+ggplot(dat = subset(dat, !is.na(isLab)),
+       aes(x = isLab, y = (after_stat(count) / sum(after_stat(count)) * 100))) +
+  geom_bar() +
+  labs(x = "Do you think Covid-10 was made in a lab from China?", y = "Proportion of thoughts") +
+  scale_x_discrete(labels = c("isn't Lab" = "No, I don't think so", "is Lab" = "Yes, I think so"))
+  
+
+
+```
+
+## Histogram in ggplot2
+First I'll demonstrate the basics of creating a histogram in ggplot2.
+```{r prof-hist}
+
+# Look at the data and recode
+# V202182 POST: FEELING THERMOMETER: IMMIGRATION AND CUSTOMS ENFORCEMENT (ICE) AGENCY
+summary(dat$V202182)
+dat$feel_ice <- dat$V202182
+dat$feel_ice[dat$V202182 < 0 | dat$V202182 > 100] <- NA
+
+ggplot(dat = subset(dat, !is.na(feel_ice)), aes(x = feel_ice)) +
+  geom_histogram(bins = 10, color = "darkblue", fill="lightblue") +
+  labs(x = "Felling Thermometer Score",
+       y = "Frequency",
+       title = "Feelings Toward Immigration and Customs Enforcement Agency(ICE), 
+       \nAmerica National Election Studies(ANES) 2020 Data") +
+  theme(aspect.ratio = 1,
+       axis.title.y = element_text(size = 14),
+       axis.title.x = element_text(size = 12),
+       plot.title = element_text(hjust = 0.5))
+```
+
+Now it's your turn! Re-create the histogram you created yesterday but use ggplot2 this time.
+```{r student-hist}
+# Your code here
+str(dat$V202158)
+table(dat$V202158)
+summary(dat$V202158)
+
+dat$feelsIce <- dat$V202158
+dat$feelsIce[dat$V202158 < 0 | dat$V202158 > 100] <- NA
+summary(dat$feelsIce)
+
+ggplot(dat = subset(dat, !is.na(feelsIce)), aes(x = feelsIce)) +
+  geom_histogram(bins = 10, color = "grey") +
+  labs(x = "feeling Thermometer Score",
+       y = "frequency",
+       title = "Feelings toward Anthony Fauci") +
+  theme(aspect.ratio = 1,
+        plot.title = element_text(hjust = 0.5))
+```
+
+# Extending Your Knowledge
+Now that you have the basics, extend your knowledge by creating graphs using ggplot2 on your own or in small groups. Use the textbook or the internet (google, Stackoverflow, ChatGPT) to help you figure out the code. I'll be here if you get stuck.
+
+
+## Two factor variables
+
+Create a graph comparing two factor variables. Probably the easiest way to do this is to create a stacked barchart. Just like before, you'll have the factor variables along the x-axis and the y-axis with show the percent or number in each category. Except this time you'll have two factor variables along the x-axis, either stacked on top of each other or (better yet) next to one another. In the text below the R chunk, interpret the graphs
+
+```{r }
+# Two factor variables: Stacked barchart  = put two barchart to one
+
+# `V201393`: Were the limits placed on activities due to covid-19 too strict or not? Recode this variable so that 1 = Not nearly strict enough and 5 = Far too strict.
+# `V202310`: How important should science be for decisions about covid? Recode this variable so that 1 = Not at all important and 5 = Extremely important.
+str(dat$V201393)
+str(dat$V202310)
+dat$limitStrict <- dat$V201393
+dat$scienceMatter <- dat$V202310
+
+dat$limitStrict[dat$V201393 < 1] <- NA
+dat$limitStrict[dat$V201393 == 1] <- 1
+dat$limitStrict[dat$V201393 == 2] <- 2
+dat$limitStrict[dat$V201393 == 3] <- 3
+dat$limitStrict[dat$V201393 == 4] <- 4
+dat$limitStrict[dat$V201393 == 5] <- 5
+#dat$limitStrict <- dat$limitStrict[!is.na(dat$V201393)]
+dat$scienceMatter[dat$V202310 < 1] <- NA
+dat$limitStrict[dat$V202310 == 1] <- 1
+
+summary(dat$limitStrict)
+summary(dat$scienceMatter)
+
+#groups <- data.frame(group=rep)
+
+#ggplot(dat = (subset(dat, !is.na(limitStrict))), aes(x=limitStrict, y=scienceMatter, fill=group)) +
+  #geom_bar(stat="identity")
+
+
+
+```
+[Write your interpretation here.]
+I am very sorry but I really have no idea about it. I searched google, chatgpt, anything and they all say different things. I am sorry.
+## A numeric (or integer) variable and a factor variable
+Show the relationship between one numeric (or integer) variable and one factor variable. Create two different graphs to show this relationship (you can use the same factor/ numeric variables for both or use different variables). First, create a boxplot. 
+
+```{r boxplot}
+# Boxplot here  
+dat$limitStrict <- dat$V201393
+dat$limitStrict[dat$V201393 < 1] <- NA
+dat$limitStrict[dat$V201393 == 1] <- 1
+dat$limitStrict[dat$V201393 == 2] <- 2
+dat$limitStrict[dat$V201393 == 3] <- 3
+dat$limitStrict[dat$V201393 == 4] <- 4
+dat$limitStrict[dat$V201393 == 5] <- 5
+dat$limitStrict <- factor(dat$limitStrict, 
+                    labels = c("Far too strict", "somewhat too strict", "About right", "Not quite strict enough", "Not nearly strict enough"), 
+                    levels = c(1,2,3,4,5))
+summary(dat$limitStrict)
+
+
+
+ggplot(dat=(subset(dat,!is.na(limitStrict))), aes(x=limitStrict)) +
+  geom_boxplot()
+```
+[Boxplot interpretation here]
+
+Second, create a barchart with the factor variable along the x-axis and the numeric (or integer) variable along the y-axis. Your interpretation of this barchart will be a little different than the one you created before. Alternatively, you can create a dotplot with the numeric (or integer) variable along the x-axis and the factor variable along the y-axis. 
+```{r bar2}
+# Barchart or dotplot here
+str(dat$V202310)
+dat$scienceMatter <- dat$V202310
+dat$scienceMatter[dat$V202310 < 1] <- NA
+
+ggplot(dat = subset(dat, !is.na(dat$scienceMatter)), aes(x=scienceMatter)) + geom_bar()
+```
+[Barchart2 or dotplot interpretation here]
+
+## Two numeric (or integer) variables
+
+Now use ggplot2 to create a graph showing the relationship between numeric (or integer) variables. Probably the best time of graph to use is a scatterplot and/or a fitted regression line. 
+```{r }
+# Code here 
+dat$limitStrict <- dat$V201393
+dat$limitStrict[dat$V201393 < 1] <- NA
+dat$limitStrict[dat$V201393 == 1] <- 1
+dat$limitStrict[dat$V201393 == 2] <- 2
+dat$limitStrict[dat$V201393 == 3] <- 3
+dat$limitStrict[dat$V201393 == 4] <- 4
+dat$limitStrict[dat$V201393 == 5] <- 5
+dat$limitStrict <- factor(dat$limitStrict, 
+                    labels = c("Far too strict", "somewhat too strict", "About right", "Not quite strict enough", "Not nearly strict enough"), 
+                    levels = c(1,2,3,4,5))
+
+
+graphL <- ggplot(dat=(subset(dat,!is.na(dat$limitStrict))), aes(x=limitStrict)) +
+  geom_boxplot()
+
+str(dat$V202310)
+dat$scienceMatter <- dat$V202310
+dat$scienceMatter[dat$V202310 < 1] <- NA
+
+graphS <- ggplot(dat = subset(dat, !is.na(dat$scienceMatter)), aes(x=scienceMatter)) + geom_bar()
+
+
+grid.arrange(graphL, graphS, ncol=2)
+
+```
+[Interpretation here]

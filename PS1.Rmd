@@ -1,0 +1,184 @@
+---
+title: "POL390 Problem Set 1"
+author: ""
+output: pdf_document
+---
+
+This problem set is designed to help you get acquainted with graphing univariate distributions using factor and numeric data, as well as graphing the relationship between variables.
+
+For you problen sets, you'll need to submit two files to Canvas: (1) your write-up with your answers to all questions (including your code, the results for computational questions, and any graphics) as a PDF file, and 2) your code as an R file (e.g., a Markdown file) so that I can verify you code runs without errors. 
+
+Please ensure that all files are identified with your last name and are completed by 11:59PM the due date. For problems that require calculations, show all the steps of your work. For problems involving `R`, make sure you comment your code. I will grade you on how legible/ clean your code is (5 points). For all of the graphs, make sure the x and y-axis are sensibly labelled and there's a title. Use any of the other tips the professor gave about making nice graphs. 
+
+# Problem 1: Gender and the Feminist Movement
+
+The goal of most feminists is to achieve gender equality. We're curious to know whether men and women in Canada are equally enthusiastic about the feminist movement. Load a datafile called `ces2019_ps1.dta` from Canvas (note: this is a .dta file, or Stata file, so you will need to use foreign or another similar package to open it). This data is from the Canadian Election Study 2019, but I've subset the data so that it contains two variables which I've recoded for simplicity (there are no missing values). The two variables are:
+
+* `feel_feminists`: This is a feeling thermometer rating where respondents indicate their feelings toward a person or group on a scale ranging from 0 (they dislike the person or group) to 100 (they like the person or group a lot). In this case, respondents are rating how they feel about feminists.
+
+* `gender`: This is a variable that indicates whether a person identified as a Man or a Woman (trans and gender non-conforming folk are not included in this subsetted data).
+
+## Problem 1 Question 1 (a)
+In the R chunk below, create a graph showing the distribution of gender (5 points):
+
+```{r p1q1a}
+
+# code here
+
+```
+
+## Problem 1 Question 1 (b)
+Based on what you learned in class, explain why you chose this type of graph and what elements you added to make it attractive/useful (5 points):
+
+
+## Problem 1 Question 2 (a)
+Now create a graph showing the distribution of feelings toward the feminist movement (it can be any of the graphs we learned in class) for the entire sample. Make sure your graph shows the measures of central tendency (i.e., the mean and the median) (7 points): 
+
+```{r p1q2a}
+
+# code here
+
+```
+
+## Problem 1 Question 2 (b)
+Interpret the graph. What does it say about the distributions of feelings toward feminists in Canada? (3 points):
+
+
+## Problem 1 Question 3 (a) 
+Now show the distribution of feelings toward feminists by gender (separately for men and for women) in Canada. Use the graph that you think is best for showing the distribution of feelings toward feminists by gender (7 points): 
+
+```{r p1q3a}
+
+# code here
+
+```
+
+## Problem 1 Question 3 (b) 
+Explain why you chose that graph. Why is the graph you chose the best way to display the information? (3 points):
+
+## Problem 1 Question 3 (c) 
+Interpret the graph: What does it say about feelings toward feminists among men and among women? Is there a difference? Offer an explanation for why this might be this be the case (5 points).
+
+
+# Problem 2: "Shy" Conservatives and Post-Material Politics
+
+Political scientists, analysts, and the media often rely on surveys to to understand political behaviour, for instance to understand how different people vote or to try to predict election outcomes. 
+
+However, there's some concern that people aren't always honest when they answer surveys. One notable phenomena that researchers have identified is the "Shy-Tory factor," which refers to the fact that right-party voters are more likely to hide their vote. 
+
+Trump's surprise win in 2016 and the Brexit referendum result are both associated with the Shy-Tory phenomenon. A similar problem is the fact that progressive parties tend to be favoured among younger people, who express support for them in surveys but then don't show up to vote on election day. We might call this the "lazy progressives" factor 
+
+For Problem Set 1, we are going to examine whether Shy Tories and lazy progressives also exist in Germany. To do so, let's use data from Germany collected by the European Social Survey (ESS). The ESS is a survey that runs every two years and covers social and political issues in most European countries. The dataset (`ESS_Germany_2018.csv`) has been posted on Canvas. The main variables we need for the analysis are posted below.
+
+* `vote`: Whether the respondent voted (“Yes”,“No”) or is not elegible to vote (“Not elegible to vote”).
+
+* `prtvede1`: Party voted in the First vote (constituency) in the 2017 election for the Bundestag (lower house).
+
+* `prtvede2`: Party voted in the Second vote (list) in the 2017 election for the Bundestag (lower house).
+
+* `gndr`: Gender
+
+* `agea`: Age
+
+Because we want to compare the survey data with the actual results of the German election, we have also included the national vote totals and percentages by party for each type of vote in the datafile called `results_germany_2017.csv`.
+
+Just as some background context: the two most common electoral systems are called single-member plurality and proportional representation (PR) systems. In single-member constituencies (like in Canada), each electoral district in the country (each riding, or constituency) is assigned one seat in the lower chamber, all the candidates in that district compete for that single seat, and the candidates more votes gets the seat. In PR systems, districts are larger and there are many seats to be assigned. Instead of individual candidates competing against one another, the parties compete. The parties are assigned a proportion of the seats that corresponds to their proportion of the votes they received. Germany has a hybrid electoral system that combines both the single-member constituencies (like Canada) with PR to elect the lower house, called the Bundestag. This means that each voter casts two votes at the same time: one for a candidate in their constituency and one for a party list.
+
+Alternative for Germany (AfD) is a far-right populist party associated with Neo-Nazi positions. The Green Party is a progressive environmentalist party. Both of these parties have experienced a relevant increase in their vote shares in the last elections. Load the `results_germany_2017.csv` dataset which has the results (the “truth”) for the 2017 German election. To load the dataset use read.csv funtion. To correctly display this dataset you will need to set the encoding to UTF-8 and the separator to ";". I have given you the code below:
+
+``` {r p2q1, message=F, warning=F} 
+ger_election <- read.csv("/Users/edanabeauvais/Documents/SFU Undergrad Teaching/2022 Summer/Problem Sets/PS1/PS1 Solutions/results_germany_2017.csv",
+encoding = "UTF-8", sep = ";")
+
+subset(ger_election,
+party_name %in% c("Alternative for Germany (AFD)", "The Greens"))
+
+
+```
+
+## Problem 2 Question 1
+Looking at the table in the R chunk above, what was the percentage of ACTUAL votes for the AfD and The Greens in the First and Second votes? (4 points)
+
+
+Since the ESS is a large representative sample, the survey should reflect the population (above) and so the distribution of vote intention in the survey should be pretty close to the actual results from the national election (the results that we saw above). 
+
+To create the graphic we want, we will first have to calculate the vote percentages of each party in the first and second votes using the ESS data. The denominator will be those who reported that they voted and said which party they voted for. You will see that there are some respondents who reported voting but did not disclose a particular party, but we will not worry about these respondents for now. 
+
+Then we will need to create a table adding a column with the estimated (ESS data) and the actual data, as well as a column with the difference between the two. The table will have seven colums: party name, estimated first vote, actual first vote, difference between estimated and actual first vote, estimated second vote, actual second vote, difference between estimated and actual second vote. The table should have clear descriptive names in its columns as this will make graphing easier. It will also make graphing easier if we order the table by first true vote percentages, in descending order. 
+
+I have done all this coding for you so that you can focus on graphing. Before you create your graph, make sure you run this line of code:
+``` {r p2, message=F, warning=F, include = F} 
+# Load the ESS survey data:
+ger_survey <- read.csv("/Users/edanabeauvais/Documents/SFU Undergrad Teaching/2022 Summer/Problem Sets/PS1/PS1 Solutions/ESS_Germany_2018.csv")
+
+# Create two tables:
+tab_v1 <- data.frame(prop.table(table(ger_survey$prtvede1))*100)
+tab_v2 <- data.frame(prop.table(table(ger_survey$prtvede2))*100)
+
+# Sensible names
+colnames(tab_v1) <- c("party_name", "survey_v1")
+colnames(tab_v2) <- c("party_name", "survey_v2")
+
+# Merging the two into a single table
+tab_votes <- merge(tab_v1, tab_v2, by = "party_name")
+tab_votes <- merge(tab_votes, ger_election, by = "party_name", all.x = TRUE)
+
+# Getting the difference:
+tab_votes$diff_v1 <- tab_votes$survey_v1-
+tab_votes$vote1_perc
+tab_votes$diff_v2 <- tab_votes$survey_v2-
+tab_votes$vote2_perc
+
+# Reordering into descending order:
+tab_votes <- tab_votes[order(tab_votes[,"vote1_perc"], decreasing = TRUE),]
+```
+
+
+## Problem 2 Question 2
+Using the table `tab_votes` (created in the R chunk above), create a barplot showing the survey percentage and the actual percentage for the first vote. Use only the top five parties by first vote in your plot. The x-axis should have party names and the y-axis the percentage. The bars for each party should be next to each other. Make sure your audience can distinguish the survey percentage from the actual percentage using colours and/or a legend (10 points). 
+
+```{r p2q2}
+
+# Code here
+
+```
+
+## Problem 2 Question 3
+What do you conclude? Which party benefits the most from people "lying"? Which one do voters seem to feel more "ashamed" of saying that they voted for? Are German progressive voters "lazy" and right-wing voters "shy"? 
+
+Note that by "benefit" I mean a higher vote share reported in surveys (a lower actual vote share). It's a benefit in the sense that it makes the party look more popular in surveys than it is in reality. I've use quotation mark to show that this might mislead the party’s campaign and so might not be an actual benefit. (6 points)
+
+
+# Problem 3: Post-Materialist Values 
+
+Until a couple of decades ago, most political scientists thought that the main determinant of partisan identity was social class. That is, the perception was that workers and low-income individuals identify with left-wing parties while capitalists and members of the upper-middle class identify with right-wing parties. However, by the mid-90’s, some authors started arguing that political preferences have undergone a major change. The authors observed that among new generations, issues like the environment, diversity, and gender equality were more important than classical left-right issues like taxes or welfare.
+
+Ronald Inglehart and Pippa Norris called these new preferences "post-materialist values" (as opposed to the "materialist" preferences of the past) and they argued that age and gender (instead of class) were the new key determinants of partisan identities (with women and young people identifying with parties promoting progressive values and old people and men identifying with culturally conservative parties).
+
+In this problem, let’s then explore the relationship between some demographic characteristics and voting behaviour to identify whether there are differences in age and gender between The Greens and AfD supporters. 
+
+First, you will need to create a table showing the percentages of AfD and Green Party supporters (i.e., respondents who claim to have voted for that party) who are men and women. To make graphing easier, you'll want to subset the data to these two parties. I have done this for you. Run the code below before you create your next graph.
+
+``` {r p3, message = F, warning = F, include = F} 
+# 1 point each for each cell
+afd_gr <- subset(ger_survey, prtvede1 %in% c("Alternative for Germany (AFD)", "The Greens"))
+
+prop.table(table(afd_gr$gndr, as.character(afd_gr$prtvede1)), margin = 2) * 100
+
+```
+
+## Problem 3 Question 1
+
+Create a histogram or density plot with the age of the voters of the AfD and Green voters. For simplicity, in this question use the first vote only. Hint: In this plot, age will go along the x-axis and vote choice will be shown with different colours (use red for the AfD and green for the Green Party). Both histograms or densities should be on the same plot. Don't forget to include a plot title and a legend referencing the colours (10 points).
+
+``` {r p3q1, message=F, warning=F} 
+
+# Code here
+
+```
+
+## Problem 3 Question 2
+
+Interpret your graph. Does your graph show evidence of the Inglehart and Norris post-materialist thesis? Why or why not? (5 points)
+
+

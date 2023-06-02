@@ -1,0 +1,87 @@
+---
+title: "POL390 Week4 Monday"
+output: html_document
+date: "2023-05-29"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+## Installation and Getting Started
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+install.packages('shiny')
+library(shiny)
+runExample("01_hello")
+
+
+
+```
+
+```{r newchunkname}
+#define UI
+
+ui <- fluidPage(
+  
+  titlePanel("titlePanel"),
+  ## shiny generally follow javascript
+  sidebarLayout( position = "left",
+    sidebarPanel("sidebarPanel"),
+    mainPanel(
+      h1("First level title"),
+      h2("Second level title"),
+      h6("Sixth level title", align = "center"),
+      
+      p("p creates a paragraph of text. Supply a style attribute
+        to change the format of the entire paragraph,", style = "font-family: 'times'; font-si16pt"),
+      strong("strong() makes bold text."),
+      em("em() creates italicized text."),
+      br(),
+      code("code displays your text similar to computer code"),
+      div("div creates segments of text with a similar style. This division of text is all blue because I passed the argument 'syle = color:blue' to div", style = "color:blue",
+          br(),
+          em("div can do this too")
+          ),
+      p("span does the same thing as div, but it works with",
+        span("groups of words", style = "color:red"),
+        "that appear inside a paragraph"),
+      img(src = "bird1.jpg", height = 72, width = 72)
+    )
+)
+)
+#define server logic
+server <- function(input, output) {
+  
+}
+#run the app
+shinyApp(ui = ui, server = server)
+
+```
+
+```{r layout}
+ui <- fluidPage(
+  titlePanel("titlePanel"),
+  
+  sidebarLayout(
+    sidebarPanel("sidebarPanel"),
+    mainPanel("mainPanel")
+  )
+)
+```
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

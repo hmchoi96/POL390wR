@@ -1,0 +1,119 @@
+---
+title: "POL390 Week 2 Monday"
+output: pdf_document
+---
+
+# Getting Started
+
+In today's lab, we'll create some univariate graphs using base R. Univariate means one variable. Next time we'll extend our graphing skills by learning to use ggplot2. You can choose which variables you want to graph from the following variables:
+
+* `V202557`: Was the coronavirus (covid-19) developed intentially in a lab? Recode this variable so that 0 = No and 1 = Yes.
+* `V201393`: Were the limits placed on activities due to covid-19 too strict or not? Recode this variable so that 1 = Not nearly strict enough and 5 = Far too strict.
+* `V202310`: How important should science be for decisions about covid? Recode this variable so that 1 = Not at all important and 5 = Extremely important.
+* `V201624`: Has anyone in your household tested positive for covid? Recode this variable so that 0 = No and 1 = Yes. // 
+* `V202187`: Feelings toward the Center for Disease Control (CDC) on a scale from 0 (very cold feelings) to 100 (very warm feelings). This variable needs cleaning.
+* `V202158`: Feelings toward Anthony Fauci on a scale from 0 (very cold feelings) to 100 (very warm feelings). This variable needs cleaning.
+
+First, check/ set your working directory and load the data:
+```{r preamble, message = F}
+install.packages("tidyverse")
+
+# Check/ set working directory
+getwd()
+setwd("/Users/hyunmyungchoi/study_R/POL390")
+# Load data
+dat <- read.csv("anes_timeseries_2020_csv_20220210.csv")
+dim(dat)
+```
+
+
+# 1. Creating a Bar Graph 
+
+## Professor example of a bar graph
+First, the prof will show you how to create a basic bar graph (or bar chart) in base R that shows the distribution of vote choice in the 2020 US election. First we'll do some recoding in base R. Bar graphs are useful when you want to show the distribution of a factor variable on the x-axis. We will recode the variable so that it is a dummy variable (two-category) where voted for Biden = 0 and voted for Trump = 1 and any other response is coded as missing.
+factor vari - for category, text & number <-> numeric vari - numb only
+```{r prof1}
+## str => structure
+# Look at the data and recode
+table(dat$V202073)
+str(dat$V202073)
+# Recode V202073 POST: FOR WHOM DID R VOTE FOR PRESIDENT
+dat$vote_trump <- dat$V202073
+dat$vote_trump[dat$V202073 < 1 | dat$V202073 > 2] <- NA
+dat$vote_trump[dat$V202073 == 1] <- 0
+dat$vote_trump[dat$V202073 == 2] <- 1
+str(dat$vote_trump)
+
+dat$vote_trump <- factor(dat$vote_trump, labels = c("Biden", "Trump"), levels = c(0, 1))
+# Simple barchart
+barplot(table(dat$vote_trump))
+
+
+# Adding some details:
+### main -> title, names.arg -> x axis
+barplot(table(dat$vote_trump), main ="Vote Choice Major Candidate (ANES 2020)",
+        names.arg = c("Biden Voters", "Trump Voters"),
+        col = "white", border ="steelblue")
+
+
+```
+
+## Student practice creating a bar graph
+Now it's your turn!
+```{r student1}
+# Code here
+table(dat$V202557)
+str(dat$V202557)
+dat$isLab <- dat$V202557
+dat$isLab[dat$V202557 < 1] <- NA
+dat$isLab[dat$V202557 == 2] <- 0
+dat$isLab[dat$V202557 == 1] <- 1
+str(dat$isLab)
+summary(dat$isLab)
+dat$isLab <- factor(dat$isLab, labels = c("isn't Lab", "is Lab"), levels = c(0,1))
+## 46% is proportion of "is lab"
+barplot(table(dat$isLab))
+```
+
+
+# 2. Creating a Histogram 
+
+## Professor example of a histogram
+First, the prof will show you how to create a basic histogram in base R that shows the distribution of feelings toward the U.S. Immigration and Customs Enforcement (ICE) Agency. First we have to do some data cleaning.
+
+```{r prof2}
+# Look at the data and recode
+# V202182 POST: FEELING THERMOMETER: IMMIGRATION AND CUSTOMS ENFORCEMENT (ICE) AGENCY
+##higher value = more warm
+str(dat$V202182)
+table(dat$V202182)
+summary(dat$V202182)
+
+dat$feel_ice <- dat$V202182
+dat$feel_ice[dat$V202182 < 0 | dat$V202182 > 100] <- NA
+summary(dat$feel_ice)
+# Graph histogram
+hist(dat$feel_ice)
+hist(dat$feel_ice,
+     main = "Feelings Toward the Immigration and Customs Enforcement Agency (ICE). \nAmerican National Election Studies (ANES) 2020 Data",
+     xlab = "Feeling Thermoneter Score")
+```
+
+## Student practice creating a histogram
+
+Now it's your turn! Pick a numeric variable to graph using a histogram in base R.
+
+```{r student2}
+# Code here 
+str(dat$V202158)
+table(dat$V202158)
+summary(dat$V202158)
+
+dat$feelsIce <- dat$V202158
+dat$feelsIce[dat$V202158 < 0 | dat$V202158 > 100] <- NA
+summary(dat$feelsIce)
+
+hist(dat$feelsIce,
+     main = "Feelings toward Anthony Fauci",
+     xlab = "very cold toward 0, very warm toward 100")
+```

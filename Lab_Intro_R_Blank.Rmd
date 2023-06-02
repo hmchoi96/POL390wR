@@ -412,23 +412,16 @@ Someitmes values are simply missing. For instance, maybe in a survey there is a 
 
 ```{r missing-prof}
 # Create a vector with some missing values:
- 
 
 # Evaluate whether each element of vector_with_na is missing:
 
-
 # Evaluate whether each element of vector_with_na is NOT missing:
-
 
 # Omit all values in vector_with_na that are NA:
 
-
 # Using the function mean() with a vector that has missing values will return an error message:
 
-
 # However, using the function mean() with a vector that has missing values will work as long as you specify that there are missing values, using the command, na.rm=T. This removes NA values in both the numerator and denominator:
-
-
 
 # Note: NAs can cause significant problems when using certain functions. This is why many functions have an argument na.rm = T that removes any NAs from the calculation.
 ```
@@ -443,19 +436,13 @@ gf <- c(F, T, T, NA)
 statue <- as.factor(c("student", "salesman", "student", "student"))
 myfriends<- cbind.data.frame(person, age, gf, statue)
 # Evaluate whether each element of vector_with_na is missing:
-is.na(myfriends)
-isMissing <- function(x) {
-  if(is.na(x)) {
-    print("Im sorry")
-  }
-  
-}
-isMissing(myfriends)
-# Evaluate whether each element of vector_with_na is NOT missing:
+isMissing <- is.na(myfriends)
 
+# Evaluate whether each element of vector_with_na is NOT missing:
+isNotMissing <- complete.cases(myfriends)
 
 # Omit all values in vector_with_na that are NA:
-
+omitNA <- na.omit(myfriends)
 ```
 
 ## Setting Your Working Directory and Loading Outside Data 
@@ -465,15 +452,16 @@ Normally, one of the first things that you will do is check to make sure you're 
 ```{r wd-student}
 # Get working directory:
 
+#### /Users/hyunmyungchoi/study_R/POL390
 
 # Set working directory directly in your console (not here, but you can comment out the code if you'd like):
-
+setwd("/Users/hyunmyungchoi/study_R/POL390")
 
 # Install a package to read different types of datafiles:
 # After you've installed it, comment it out with the hashtag symbol because otherwise it will generate an error when you compile your Markdown 
-
 # Load the package:
 
+#### library("tidyverse", "rmarkdown")
 
 # This is the syntax to load datasets (we won't actually do it):
 # legis_dat <- readit("ANES2016.dta") # Loads a .dta (Stata) file
@@ -487,11 +475,7 @@ Now your turn! Check/set your working directory. We won't actually load any data
 
 ```{r wd-prof}
 # Get working directory:
-
-
 # Set working directory:
-
-
 ```
 
 
