@@ -1,0 +1,182 @@
+---
+title: "POL390 Intro to Text Analysis"
+output: pdf_document
+---
+# Getting Familiar with Tidy Text
+
+Before we dive into today's lab, let's look at some different text formats and how to convert string text into the "tidy text" (one-token-per-document-per-row) format. We'll do this together as a class. 
+
+```{r prof-tidypractice, message = FALSE}
+rm(list = ls())
+## books with expired copyright can be brought 
+library(gutenbergr)
+
+# Example of string data (from Machiavelli's The Prince)
+text <- c("Every one sees what you appear to be, few really know what you are, and those few dare not oppose themselves to the opinion of the many, who have the majesty of the state to defend them...",
+          "For that reason, let a prince have the credit of conquering and holding his state, the means will always be considered honest, and he will be praised by everybody;",
+          "because the vulgar are always taken by what a thing seems to be and by what comes of it")
+
+
+
+# To turn it into a tidy text dataset, must put it into a data frame:
+library(dplyr)
+
+text_df <- tibble(line = 1:3, text = text)
+
+```
+
+There's a problem! 
+
+This data frame with text still isn't compatible with tidy text analysis. Using this format, we can’t filter out words or count which occur most frequently (each row is made up of multiple combined words). We must convert this to one-token-per-document-per-row
+
+```{r prof-tidypractice2, message = FALSE}
+
+# convert this to one-token-per-document-per-row
+library(tidytext)
+
+text_df %>% 
+  unnest_tokens(word, text)
+```
+
+
+# Text Pre-processing and Visualizing Word Frequencies
+
+For the rest of this lab, we will compare philosophy texts written by the Ancient Greeks (Plato and Aristotle) with philosophy texts written by the moders (Machiavelli and Hobbes). According to my undergrad political theory prof, Professor Clifford Orwin, the Ancients were designing the perfect, most just society. He argues that things change with the moderns, and modern theorists shifted their attention to designing societies that avoid the worst.
+
+
+## Professor Example
+The prof will first load the text data, remove the numbers, and create a tibble using two examples: Plato's Republic and Machiavelli's The Prince. The prof will show you how to tokenize (and remove punctuation), and how to stem. Then the prof will graph the word frequencies and stem frequencies. The prof will also create a word and stem cloud. This allows us to see how, if at all, stemming impacts our inferences and data visualizations.
+
+```{r prof-eg1, message = FALSE}
+
+# Load the data for the first book:
+rm(list = ls())
+gutenberg_works(author == "Plato")
+republic_tibble <- gutenberg_download(150)
+
+# Packages for text mining/ Word cloud stuff
+library(tidytext)
+library(stringr)
+library(dplyr)
+library(rtweet)
+library(wordcloud2)
+library(corpustools)
+library(SnowballC)
+library(tm)
+stopwords("English")
+
+# Remove numbers
+republic_tibble <- republic_tibble[-grep("\\b\\d+\\b",
+                                         republic_tibble$text),]
+
+# Creating a tibble 
+# regex -> remove puncuation
+republic_tibble <- republic_tibble %>% 
+  unnest_tokens(word, text, token = "regex",
+                pattern = "\\s+|[[:punct:]]+") %>% 
+  anti_join(stop_words) %>% 
+  mutate(stem = wordStem(word))
+
+
+# Word frequency plot
+library(ggplot2)
+word_frequency_republic_plot <- republic_tibble %>% 
+  count(word, sort = T) %>% 
+  filter(n > 100) %>% 
+  mutate(word = reorder(word, n)) %>% 
+  ggplot(aes(n, word)) +
+  geom_col() +
+  labs(y = NULL)
+
+# Stem frequency plot
+stem_frequency_republic_plot <- republic_tibble %>% 
+  count(stem, sort = T) %>% 
+  filter(n > 100) %>% 
+  mutate(stem = reorder(stem, n)) %>% 
+  ggplot(aes(n, stem)) +
+  geom_col() +
+  labs(y = NULL)
+
+# Stem is useful for more precise analysis but harder to convey meaning to audiences
+
+# Wordcloud with words
+# Create a word count
+word_count_republic <- republic_tibble %>% 
+  count(word, sort = T)
+
+# Create word cloud:
+set.seed(6037)
+wordcloud2(word_count_republic, size = 1)
+
+# Wordcloud with words
+# Create a stem count
+word_count_republic
+
+
+```
+
+Now the prof will look at a book by an early modern writer (writing during the Renaissance): Machiavelli's The Prince.
+
+```{r prof-eg2, message = FALSE}
+
+
+
+# Remove numbers
+
+
+# Creating a tibble 
+
+
+
+# Word frequency plot
+
+
+# Stem frequency plot
+
+
+# Wordcloud with words
+# Create a word count
+
+
+# Create word cloud:
+
+
+# Wordcloud with words
+# Create a stem count
+
+```
+
+
+## Student practice
+Now it's your turn! Using your text data, you will create a tibble  and tokenize. Otherwise, all the decisions (regarding removing numbers, punctuation, or stemming) are up to you. Graph the word frequencies (and/or stem frequencies) and create a word cloud (or two word clouds if you want to look at both words and stems). Start by looking at Aristotle's Politics. I have given you the code for loading this data.
+
+```{r student-firstvignette, message = FALSE}
+
+
+
+```
+
+Now do the same thing for your second book! The second book you will look at is Hobbes's Leviathan.
+
+```{r student-secondvignette, message = FALSE}
+
+
+```
+
+
+# Comparing Responses Across Vignettes
+Now let's compare which words are used more/less frequently across the Classical and Modern philosophy books. This might help clarify whether Professor Orwin was right: Were Classical more interested in designing ideal, just polities while the Moderns are more focused on creating polities that avoid the worst? 
+
+## Prof example
+First the prof will show you how this is done using the first three vignettes as an example.
+```{r prof-compare, message = F}
+
+
+```
+
+## Student Practice
+Now it's your turn! Replicate the prof's example except use the three vignettes that you chose to compare.
+```{r student-compare, message = F}
+
+
+```

@@ -1,0 +1,319 @@
+---
+title: "POL390 Text Analysis 2"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Professor Example Text Pre-Processing
+The prof will first load the text data, remove the numbers, and create a tibble using Plato's Republic. .
+
+```{r prof-eg1, message = FALSE}
+# Packages for text mining/ Word cloud stuff
+library(tidytext)
+library(stringr)
+library(dplyr)
+library(rtweet)
+library(wordcloud2)
+library(SnowballC)
+library(tm)
+stopwords("english")
+
+# Load the data for the first book:
+#one word -> unigram(word) / two -> bigram(word) / three -> trigram(word)
+
+#clear environment
+rm(list = ls())
+library(gutenbergr)
+gutenberg_works(author == "Plato")
+republic_tibble <- gutenberg_download(150)
+# Remove numbers
+republic_tibble <- republic_tibble[-grep("\\b\\d+\\b",
+                                         republic_tibble$text),]
+
+# Creating a tibble 
+# regex -> remove puncuation
+republic_tibble <- republic_tibble %>% 
+  unnest_tokens(word, text, token = "regex",
+                pattern = "\\s+|[[:punct:]]+") %>% 
+  anti_join(stop_words) %>% 
+  mutate(stem = wordStem(word))
+
+
+```
+
+
+# Sentiment Analysis
+
+Now let's turn our attention to sentiment analysis! First we will just look at the different sentiment dictionaries together.
+
+## Sentiments datasets
+```{r sentiment1, message = FALSE}
+
+library(tidytext)
+library(textdata)
+get_sentiments("afinn")
+```
+
+```{r sentiment2, message = FALSE}
+get_sentiments("bing")
+```
+
+```{r sentiment3, message = FALSE}
+get_sentiments("nrc")
+
+```
+
+
+## Most common positive and negative words (Bing)
+
+Let's take a look at the most common positive and negative words in Plato's Republic.
+```{r common, message = F}
+bing_word_counts_republic <- republic_tibble %>% 
+  inner_join(get_sentiments("bing")) %>% 
+  count(word, sentiment, sort = T) %>% 
+  ungroup()
+
+
+```
+
+```{r common-graph, message = FALSE}
+library(ggplot2)
+bing_word_counts_republic %>% 
+  group_by(sentiment) %>% 
+  top_n(10) %>% 
+  ungroup() %>% 
+  mutate(word = reorder(word, n)) %>% 
+  ggplot(aes(n, word, fill=sentiment)) +
+  geom_col(show.legend = F) +
+  facet_wrap(~sentiment, scales="free_y") +
+  labs(x= "contribution to Sentiment", y=NULL)
+
+```
+
+Here is an example of how to make a word cloud (better than last time):
+```{r wordcloud2, message = FALSE}
+
+library(wordcloud)
+
+
+```
+
+Here is a comparison of the most positive and negative words:
+```{r comparisoncloud, message = FALSE}
+
+library(reshape2)
+library(wordcloud)
+
+republic_tibble %>% 
+  inner_join(get_sentiments("bing")) %>% 
+  count(word, sentiment, sort = T) %>% 
+  acast(word ~ sentiment, value.var = "n", fill = 0) %>% 
+  comparison.cloud(colors = c("gray20", "gray80"), max.words = 30)
+```
+
+Now you try!
+
+```{r common-student, message = F}
+
+# create the table of common positive and negative words according to the bing dictionary is Hobbes' Leviathan (search by title)
+# Leviathan: 3207
+gutenberg_works(author == "Hobbes")
+leviathan_tibble <- gutenberg_download(3207)
+# Remove numbers
+leviathan_tibble <- leviathan_tibble[-grep("\\b\\d+\\b",
+                                         leviathan_tibble$text),]
+
+# Creating a tibble 
+# regex -> remove puncuation
+leviathan_tibble <- leviathan_tibble %>% 
+  unnest_tokens(word, text, token = "regex",
+                pattern = "\\s+|[[:punct:]]+") %>% 
+  anti_join(stop_words) %>% 
+  mutate(stem = wordStem(word))
+
+```
+
+```{r common-graph-student, message = FALSE}
+
+# graph them
+bing_word_counts_leviathan <- leviathan_tibble %>% 
+  inner_join(get_sentiments("bing")) %>% 
+  count(word, sentiment, sort = T) %>% 
+  ungroup()
+
+bing_word_counts_leviathan %>% 
+  group_by(sentiment) %>% 
+  top_n(10) %>% 
+  ungroup() %>% 
+  mutate(word = reorder(word, n)) %>% 
+  ggplot(aes(n, word, fill=sentiment)) +
+  geom_col(show.legend = F) +
+  facet_wrap(~sentiment, scales="free_y") +
+  labs(x= "contribution to Sentiment", y=NULL)
+```
+
+Practice an example of how to make a word cloud:
+```{r wordcloud-student, message = FALSE}
+
+library(wordcloud)
+# Show in a word cloud
+
+```
+
+Practice doing a wordcloud comparison of the most positive and negative words:
+```{r comparisoncloud-student, message = FALSE}
+
+library(reshape2)
+library(wordcloud)
+# Compare positive & negative words in the word cloud
+leviathan_tibble %>% 
+  inner_join(get_sentiments("bing")) %>% 
+  count(word, sentiment, sort = T) %>% 
+  acast(word ~ sentiment, value.var = "n", fill = 0) %>% 
+  comparison.cloud(colors = c("gray20", "gray80"), max.words = 30)
+
+```
+
+# N-grams
+Now let's learn about n-grams! Just like tokenize with words, we can tokenize with n-grams, where the "n" just refers to the number of consecutive words that appear together. Bigrams (where $n=2$) are popular, and sometimes (less often) people look at trigrams ($n=3$) However, people rarely look at anything where $n>3$. Why do you think that is? In the last bit of this `R` chunk, under "analyzing bigrams" play around with the filter (change whether you're filtering by word1 or word2, and change the word you want to filter by). 
+
+```{r prof-bigram}
+
+# Tokenizing by n-gram / n=2 -> bigram
+republic_bigrams <- gutenberg_download(150) %>%   
+  unnest_tokens(bigram, text, token = "ngrams", n = 2) 
+
+# Counting and filtering n-grams 
+republic_bigrams %>% count(bigram, sort = TRUE) 
+
+# Can see a lot are stop words. Remove them: 
+library(tidyr) 
+
+bigrams_separated <- republic_bigrams %>%   separate(bigram, c("word1", "word2"), sep = " ") 
+
+bigrams_filtered <- bigrams_separated %>% 
+  filter(!word1 %in% stop_words$word) %>%   # if word1/2 is not in stop_word, don't filter    
+  filter(!word2 %in% stop_words$word) 
+
+# new bigram counts: 
+bigram_counts <- bigrams_filtered %>%    count(word1, word2, sort = TRUE) 
+
+# tidyr’s unite() function is the opposite of separate(), and lets us recombine the columns into one. Thus, “separate/filter/count/unite” let us find the most common bigrams not containing stop-words 
+bigrams_united <- bigrams_filtered %>%   
+  # filter(vignettes == "2") 
+  unite(bigram, word1, word2, sep = " ") 
+
+
+
+# Analyzing bigrams
+bigrams_separated %>% 
+  filter(word2 == "not") %>%           # find second word is truth
+  count(gutenberg_id, word1, sort = T)
+
+```
+
+
+## Student Practice 
+
+Now it's your turn! Graph the most common `not words` for either Aristotles's Politics or Hobbes's Leviathan.
+
+```{r bisent2-student, message = FALSE}
+# Code here
+leviathan_bigrams <- gutenberg_download(3702) %>%   
+  unnest_tokens(bigram, text, token = "ngrams", n = 2) 
+
+leviathan_bigrams %>%   
+  count(bigram, sort = TRUE) 
+
+bigrams_separated <- leviathan_bigrams %>%   
+  separate(bigram, c("word1", "word2"), sep = " ") 
+
+bigrams_filtered <- bigrams_separated %>%     
+  filter(!word1 %in% stop_words$word) %>%   
+  filter(!word2 %in% stop_words$word) 
+
+bigram_counts <- bigrams_filtered %>%    count(word1, word2, sort = TRUE) 
+
+bigrams_separated %>% 
+  filter(word1 == "not") %>% 
+  count(gutenberg_id, word1, sort = TRUE)
+```
+
+
+# Using bigrams to identify negations for sentiment analysis
+We can also use bigrams to identify negations, and then use that to see which words might be coded incorrectly in our sentiment analysis. Here I will create the table that contains the most common bigrams preceded by "not" just for Plato's Republic.
+
+```{r , message = FALSE}
+
+AFINN <- get_sentiments("afinn")
+
+library(ggplot2)
+not_words <- bigrams_separated %>%
+  filter(word1 == "not") %>% 
+  filter(gutenberg_id == "150") %>% 
+  inner_join(AFINN, join_by(word2 == "word")) %>% 
+  count(word2, value, sort = T)
+
+not_words %>% 
+  mutate(contribution = n*value) %>% 
+  arrange(desc(abs(contribution))) %>% 
+  head(20) %>% 
+  mutate(word2 = reorder(word2, contribution)) %>% 
+  ggplot(aes(n * value, word2, fill = n * value >0)) +
+  geom_col(show.legend = F) 
+  #+ labs(x = "Sentiment value * number of occurances", y = "Words preceded by not")
+```
+
+
+## Identifying negations student practice
+Now you try!
+```{r bisent2, message = FALSE}
+
+# Your code here
+```
+
+
+
+
+## Extra stuff: sentiment analysis with inner join (nrc) 
+This is extra stuff if there's time in class, it's not necessary for homework.
+Let's use the nrc dictionary to find the most common joy words!
+```{r joy, message = F}
+
+library(dplyr)
+library(stringr)
+library(tidyr)
+
+nrc_joy <- get_sentiments("nrc") %>% 
+  filter(sentiment == "joy")
+
+republic_tibble %>%
+  inner_join(nrc_joy) %>%
+  count(word, sort = TRUE)
+
+# Graphing the top joy words
+library(ggplot2)
+republic_joy_plot <- republic_tibble %>%
+  inner_join(nrc_joy) %>%
+  count(word, sort = TRUE) %>% # Plot the count
+  filter(n > 30) %>% # Only words used 50 times or more
+  mutate(word = reorder(word, n)) %>% # Sorted by n
+  ggplot(aes(n, word)) +
+  geom_col() +
+  labs(y = NULL)
+
+```
+
+## Student practice:
+Now it's your turn! Look up the most common words of some sentiment (it doesn't have to be joy) in either Aristotle's Politics or Hobbes's Leviathan.
+
+```{r joy-student, message = F}
+
+library(dplyr)
+library(stringr)
+library(tidyr)
+
+# Practice here
+
+```

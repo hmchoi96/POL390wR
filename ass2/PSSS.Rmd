@@ -1,0 +1,143 @@
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tmap)
+library(leaflet)
+library(sf)
+library(stringr)
+library(sp)
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(mapcan)
+library(geojsonio)
+library(janitor)
+library(remotes)
+library(tmaptools)
+#install.packages("oldtmaptools")
+#library(oldtmaptools)
+getwd()
+setwd("/Users/hyunmyungchoi/study_R/POL390/ass2")
+canada_election_history <- read.csv("HFER_e.csv")
+election_results_41st <- read.csv("2011_Canadian_Federal_Election_Results.csv")
+
+election_results_42nd <- read.csv("2015_Canadian_Federal_Election_Results.csv")
+
+election_results_43rd <- read.csv("2019_Canadian_Federal_Election_Results.csv")
+
+election_results_44th <- read.csv("2021_Canadian_Federal_Election_Results.csv")
+
+eds_canada_2015 <- read_sf("FED_CA_2_2_ENG.shp")
+
+eds_canada_2019 <- read_sf("FED_CA_2019_EN.shp")
+
+eds_canada_2021 <- read_sf("FED_CA_2021_EN.shp")
+
+names(eds_canada_2015)[names(eds_canada_2015) == "ENNAME"] <- "ed_names_eng"
+names(eds_canada_2015)[names(eds_canada_2015) == "FRNAME"] <- "ed_names_fr"
+names(eds_canada_2015)[names(eds_canada_2015) == "FEDNUM"] <- "ed_number"
+names(eds_canada_2019)[names(eds_canada_2021) == "PROVCODE"] <- "provcode"
+
+names(eds_canada_2019)[names(eds_canada_2019) == "ENNAME"] <- "ed_names_eng"
+names(eds_canada_2019)[names(eds_canada_2019) == "FRNAME"] <- "ed_names_fr"
+names(eds_canada_2019)[names(eds_canada_2019) == "FEDNUM"] <- "ed_number"
+names(eds_canada_2019)[names(eds_canada_2019) == "PROVCODE"] <- "provcode"
+
+names(eds_canada_2021)[names(eds_canada_2021) == "ED_NAMEE"] <- "ed_names_eng"
+names(eds_canada_2021)[names(eds_canada_2021) == "ED_NAMEF"] <- "ed_names_fr"
+names(eds_canada_2021)[names(eds_canada_2021) == "FED_NUM"] <- "ed_number"
+
+names(election_results_42nd)[names(election_results_42nd) == "Votes.Obtained.Votes.obtenus"] <- "votes_obtained_15"
+names(election_results_42nd)[names(election_results_42nd) == "Percentage.of.Votes.Obtained..Pourcentage.des.votes.obtenus"] <- "vote_perc_15"
+names(election_results_42nd)[names(election_results_42nd) == "Majority.Majorité"] <- " majority_15"
+names(election_results_42nd)[names(election_results_42nd) == "Candidate.Occupation.Profession.du.candidat"] <- "candidate_occupation_15"
+names(election_results_42nd)[names(election_results_42nd) == "Candidate.Candidat"] <- "candidate_15"
+names(election_results_42nd)[names(election_results_42nd) == "Election.Date"] <- "election_date_15"
+names(election_results_42nd)[names(election_results_42nd) == "Electoral.District.Name.Nom.de.circonscription"] <- "ed_name_15"
+names(election_results_42nd)[names(election_results_42nd) == "Majority.Percentage.Pourcentage.de.majorité"] <- "majority_percentage_15"
+names(election_results_42nd)[names(election_results_42nd) == "Candidate.Residence.Résidence.du.candidat"] <- "candidate_residence_15"
+names(election_results_42nd)[names(election_results_42nd) == "Electoral.District.Number.Numéro.de.circonscription"] <- "ed_number_15"
+names(election_results_42nd)[names(election_results_42nd) == "Province"] <- "province_15"
+
+names(election_results_43rd)[names(election_results_43rd) == "Votes.Obtained.Votes.obtenus"] <- "votes_obtained_19"
+names(election_results_43rd)[names(election_results_43rd) == "Percentage.of.Votes.Obtained..Pourcentage.des.votes.obtenus"] <- "vote_perc_19"
+names(election_results_43rd)[names(election_results_43rd) == "Majority.Majorité"] <- " majority_19"
+names(election_results_43rd)[names(election_results_43rd) == "Candidate.Occupation.Profession.du.candidat"] <- "candidate_occupation_19"
+names(election_results_43rd)[names(election_results_43rd) == "Candidate.Candidat"] <- "candidate_19"
+names(election_results_43rd)[names(election_results_43rd) == "Election.Date"] <- "election_date_19"
+names(election_results_43rd)[names(election_results_43rd) == "Electoral.District.Name.Nom.de.circonscription"] <- "ed_name_19"
+names(election_results_43rd)[names(election_results_43rd) == "Majority.Percentage.Pourcentage.de.majorité"] <- "majority_percentage_19"
+names(election_results_43rd)[names(election_results_43rd) == "Candidate.Residence.Résidence.du.candidat"] <- "candidate_residence_19"
+names(election_results_43rd)[names(election_results_43rd) == "Electoral.District.Number.Numéro.de.circonscription"] <- "ed_number_19"
+names(election_results_43rd)[names(election_results_43rd) == "Province"] <- "province_19"
+
+names(election_results_44th)[names(election_results_44th) == "Votes.Obtained.Votes.obtenus"] <- "votes_obtained_21"
+names(election_results_44th)[names(election_results_44th) == "Percentage.of.Votes.Obtained..Pourcentage.des.votes.obtenus"] <- "vote_perc_21"
+names(election_results_44th)[names(election_results_44th) == "Majority.Majorité"] <- " majority_21"
+names(election_results_44th)[names(election_results_44th) == "Candidate.Occupation.Profession.du.candidat"] <- "candidate_occupation_21"
+names(election_results_44th)[names(election_results_44th) == "Candidate.Candidat"] <- "candidate_21"
+names(election_results_44th)[names(election_results_44th) == "Election.Date"] <- "election_date_21"
+names(election_results_44th)[names(election_results_44th) == "Electoral.District.Name.Nom.de.circonscription"] <- "ed_name_21"
+names(election_results_44th)[names(election_results_44th) == "Majority.Percentage.Pourcentage.de.majorité"] <- "majority_percentage_21"
+names(election_results_44th)[names(election_results_44th) == "Candidate.Residence.Résidence.du.candidat"] <- "candidate_residence_21"
+names(election_results_44th)[names(election_results_44th) == "Electoral.District.Number.Numéro.de.circonscription"] <- "ed_number_21"
+names(election_results_44th)[names(election_results_44th) == "Province"] <- "province_21"
+
+election_results_42nd <- election_results_42nd %>%
+  arrange(desc(votes_obtained_15)) %>% 
+  group_by(ed_name_15) %>%
+  slice(1:1)
+
+election_results_43rd <- election_results_43rd %>%
+  arrange(desc(votes_obtained_19)) %>% 
+  group_by(ed_name_19) %>%
+  slice(1:1)
+
+election_results_44th <- election_results_44th %>%
+  arrange(desc(votes_obtained_21)) %>% 
+  group_by(ed_name_21) %>%
+  slice(1:1)
+
+#eds_canada_2015 <- eds_canada_2015[order(eds_canada_2015$ed_names_eng),]
+#eds_canada_2019 <- eds_canada_2019[order(eds_canada_2019$ed_names_eng),]
+#eds_canada_2021 <- eds_canada_2021[order(eds_canada_2021$ed_names_eng),]
+
+#test <- sf::read_sf(eds_canada_2015) %>%
+ # sf::st_transform('+proj=longlat +datum=WGS84')
+
+library(sf)
+
+# Set the CRS of eds_canada_2015
+st_crs(eds_canada_2015) <- "+proj=your_crs"
+
+# Transform the coordinates
+test <- st_transform(eds_canada_2015, "+proj=longlat +datum=WGS84")
+
+
+test <- eds_canada_2015 %>%
+  sf::st_transform('+proj=longlat +datum=WGS84')
+
+
+m <- leaflet(test) %>%
+  setView(-80, 35.8, 2.1) %>%
+  addProviderTiles("MapBox", options = providerTileOptions(
+    id = "mapbox.light",
+    accessToken = Sys.getenv('MAPBOX_ACCESS_TOKEN')))
+
+m %>% addPolygons(
+  data = test,
+  weight = 2,
+  opacity = 1,
+  color = "darkgray",
+  dashArray = "5",
+  fillOpacity = 0.5,
+  highlightOptions = highlightOptions(
+    weight = 2,
+    color = "black",
+    dashArray = "1",
+    fillOpacity = 1,
+    bringToFront = TRUE))
+
+tm_shape(eds_canada_2021) +
+  tm_polygons()
+```

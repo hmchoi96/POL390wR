@@ -1,0 +1,295 @@
+---
+title: "POL390 Final Exam"
+author: Choi, Jamie
+output: pdf_document
+date: '2022-06-21'
+---
+# POL390 Final Take-Home Exam
+
+## Preliminary
+For this exam you will need data from two sources. In Part 1, you will use data from the Quality of Government (QOG) Basic Dataset (note that QOG offers a few options, stick to the Basic Dataset). The dataset and codebook are available here: https://www.gu.se/en/quality-government/qog-data/data-downloads/basic-dataset. In Part 2, you will use text data from the `gutenbergr` package.
+
+## Part 1: Graphing Variable Distributions
+
+```{r p1}
+# Load the data from Quality of Government Basic Dataset here
+getwd()
+setwd("/Users/hyunmyungchoi/study_R/POL390")
+#install.packages("gutenbergr")
+library("gutenbergr")
+
+dataset <- read.csv("qog_bas_cs_jan23.csv")
+
+
+```
+
+### Part 1, Q1(a) Graph a factor variable
+
+Based on what you learned in class, use an appropriate graph to show the distribution of a factor variable in the R chunk below using data from the QOG dataset. Most of the variables in the QOG dataset are numeric/interger (not factor) but you can transform an existing numeric/integer variable into a factor variable if you want (e.g., turn a numeric variable into a factor variable with the categories "low," "medium," and "high"). Use the techniques you learned about in class for making nice graphs. 
+
+```{r p1q1a}
+# Your code here
+library(tidyr)
+library(ggplot2)
+library(dplyr)
+
+
+educationSpending <- dataset$wdi_expeduge
+country <- dataset$cname
+
+filtered_education <- data.frame(
+  educationSpending = educationSpending[!is.na(educationSpending)],
+  country = country[!is.na(educationSpending)]
+)
+
+
+breakpoints <- c(-Inf, quantile(filtered_education$educationSpending, probs = c(1/3, 2/3)), Inf)
+
+filtered_education$spending_category <- cut(filtered_education$educationSpending, breaks = breakpoints,
+                                           labels = c("Low", "Medium", "High"), include.lowest = TRUE)
+
+education_plot <- ggplot(filtered_education, aes(x = country, y = spending_category)) +
+  geom_point(size = 3, color = "blue") +
+  labs(title = "Distribution of Government Spending on Education",
+       y = "Government expenditure on education (%)",
+       x = "Countries") +
+  theme(aspect.ratio = 0.5,
+        plot.title = element_text(size = 16, face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 7.5),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 12)
+        )
+
+print(education_plot)
+
+
+
+
+
+```
+
+### Part 1, Q1(b) Interpret your graph
+In a couple of sentences, write an intepretation of your graph. What does the graph tell us about the distribution of the variable?
+_This graph shows the distribution of government expenditure on education, by low, medium, high spending. To clearly visualize, I used dot graph and X-axis is leaned 45% to avoid overlap. I extracted missing value and chose blue color to edge for better visibility and color-blind friendly._
+_The spending is very evenly distributed. One thing that is very interesting is that whether spending is high or low does not correlate much with whether a country is developed or developing. Developed countries, Japan, Korea, Denmark etc., spent medium while Peru, considered as an emerging country, spent high relatively._
+
+### Part 1, Q2(a) Graph a numeric (or integer) variable
+Based on what you learned in class, use an appropriate graph to show the distribution of a numeric or interger variable in the R chunk below using data from the QOG dataset. Use the techniques you learned about in class for making nice graphs.
+
+```{r p1q2a}
+# Your code here
+
+unemploymentRate <- dataset$wdi_empind
+country <- dataset$cname
+
+filtered_unemployment <- data.frame(
+  unemploymentRate = unemploymentRate[!is.na(unemploymentRate)],
+  country = country[!is.na(unemploymentRate)]
+)
+
+mean_unemployment <- round(mean(filtered_unemployment$unemploymentRate)*0.1,2)
+
+unemploymentData <- gather(filtered_unemployment, key = "Country", value = "UnemploymentRate", -country)
+
+filtered_unemployment2 <- unemploymentData[unemploymentData$UnemploymentRate*0.1 > mean_unemployment, ]
+
+unemploymentplot <- ggplot(filtered_unemployment2, aes(x = country, y = UnemploymentRate*0.1)) +
+  geom_col(fill = "skyblue", color="black", alpha = 0.8) +
+  labs(title = "Countries with Unemployment Rate beyond Average +/- 3 years",
+       x = "Countries",
+       y = paste("Unemployment rate (Mean: ", mean_unemployment , "%) (%)", sep = "")) +
+  theme(aspect.ratio = 0.5,
+        plot.title = element_text(size = 16, face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 12)
+        )
+
+print(unemploymentplot)
+```
+
+### Part 1, Q2(b) Interpret your graph
+In a couple of sentences, write an intepretation of your graph. What does the graph tell us about the distribution of the variable?
+_This graph shows countries with unemployment rate higher than average rate of 1.97%. X-axis shows countries with higher rate and Y-axis shows percentage rate. X-axis is leaned 45% to avoid overlap. I extracted missing value and chose skyblue to fill and black to edge for better visibility and color-blind friendly.  _
+_Overall, every country has low unemployment rate to be considered as stable. Qatar shows highest unemployment rate(5.37%) but this data seems wrong since Qatar has unemployment rate less than 1% since 1991.Otherwise most countries' unemployment rate is less than 3% which is considered normal. _
+
+### Part 1, Q3(a) Graphing the relationship between a factor and numeric (or integer) variable
+
+Based on what you learned in class, use an appropriate graph to show the relationship between a factor variable on the x-axis and a numeric or integer variable on the y-axis in the R chunk below using data from the QOG dataset. Pick two variables you think might be related Most of the variables in the QOG dataset are numeric/interger (not factor)--note that you can transform an existing numeric/integer variable into a factor variable if you want (e.g., turn a numeric variable into a factor variable with the categories "low," "medium," and "high"). Use the techniques you learned about in class for making nice graphs. 
+
+```{r p1q3a}
+# Your code here
+
+
+unemploymentRate <- dataset$wdi_empind
+educationSpending <- dataset$wdi_expeduge
+country <- dataset$cname
+
+filtered_unemployment <- data.frame(
+  unemploymentRate = unemploymentRate[!is.na(unemploymentRate)],
+  country = country[!is.na(unemploymentRate)]
+)
+
+filtered_education <- data.frame(
+  educationSpending = educationSpending[!is.na(educationSpending)],
+  country = country[!is.na(educationSpending)]
+)
+
+filtered_data <- inner_join(filtered_unemployment, filtered_education, by = "country")
+
+scatter_plot <- ggplot(filtered_data, aes(x = unemploymentRate*0.1, y = educationSpending)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "green") +
+  labs(title = "Relationship between Unemployment Rate and Government Expenditure on Education (%)",
+       x = "Unemployment Rate (%)",
+       y = "Government Expenditure on Educaton (%)") +
+  theme_minimal()
+
+print(scatter_plot)
+
+
+
+
+```
+
+### Part 1, Q3(b) Interpret your graph
+In a couple of sentences, write an intepretation of your graph. What does the graph tell us about the distribution of the variables?
+_This scatter graph shows relation between government spending on education and unemployment. Green line shows the linear regression. X-axis is unemployment rate and y-axis shows spending, both by percentage._
+_I wanted to find correlation between government spending on education and unemployment. It is not very obvious but higher spending on education is more likely to have lower unemployment rate, although there is a few exemption._
+
+
+## Part 2 Text Analysis
+
+For this section of the exam you will practice your knowledge of text analysis. For Problem 2 Question 1, I recommend you clear your working directory. You then must load the packages you may need, and create a combined dataframe/tibble (or two separate dataframes/tibbles, whatever you find easier to work with) which contain: (1) John Locke's *Second Treatise of Government* (gutenberg_id == "7370") and (2) W.E.B. Du Bois's *The Souls of Black Folk* (gutenberg_id == "408"). 
+
+For some historical context: Locke's *Second Treatise* is the second part of his *Two Treatises of Government* and it outlines his vision of civilized society based on natural rights. It outlines a theory of society based on contract. Locke was a White man born in England who lived between 1631-1704. For context, although Locke is often associated with liberal democracy he also wrote the Fundamental Constitutions for Carolina, which justified the use of slavery in the United States. *The Souls of Black Folk* was written in 1903 and contains a series of essays on race. DuBois was a Black American sociologists and civil rights activist who lived between 1868 and 1963. As a word of warning, DuBois does use the word n*gro to refer to Black folk, but keep in mind that DuBois was a Black man and an anti-racist; the use of this word has changed over time and DuBois did not use the word with negative intentions.
+
+## Part 2, Q1) Data Pre-Processing
+
+Create your dataframe/tibble objects and do whatever data pre-processing you think it necessary.
+```{r p2q1}
+# create tibble and do appropriate data pre-processing here
+#rm(list = ls())
+
+library(gutenbergr)
+library(tidytext)
+library(stringr)
+library(dplyr)
+library(rtweet)
+library(wordcloud2)
+library(SnowballC)
+library(tm)
+gutenberg_works(author == "John Locke")
+republic_tibble <- gutenberg_download(7370)
+
+gutenberg_works(author == "W.E.B. Du Bois")
+republic_tibble2 <- gutenberg_download(408)
+
+
+republic_tibble <- republic_tibble %>%
+  mutate(text = str_replace_all(text, "\\b\\d+\\b", "")) %>%
+  unnest_tokens(word, text, token = "regex", pattern = "\\s+|[[:punct:]]+") %>%
+  anti_join(stop_words)
+
+republic_tibble2 <- republic_tibble2 %>%
+  mutate(text = str_replace_all(text, "\\b\\d+\\b", "")) %>%
+  unnest_tokens(word, text, token = "regex", pattern = "\\s+|[[:punct:]]+") %>%
+  anti_join(stop_words)
+
+```
+
+
+## Part 2, Q2(a) Word Frequency Plot
+
+Graph a word frequency plot showing words that occur more than 100 times in DuBois's *Souls of Black Folk* and another word frequency plot showing words that occur more than 100 times in Locke's *Second Treatise*.
+
+```{r p2q2a}
+# code here
+library(gutenbergr)
+library(tidyverse)
+library(tidytext)
+
+word_freq_republic <- republic_tibble %>%
+  count(word) %>%
+  filter(n > 100) %>%
+  arrange(desc(n))
+
+word_freq_republic2 <- republic_tibble2 %>%
+  count(word) %>%
+  filter(n > 100) %>%
+  arrange(desc(n))
+
+word_freq_plot_republic <- ggplot(word_freq_republic, aes(x = reorder(word, n), y = n)) +
+  geom_col(fill = "steelblue") +
+  labs(title = "Word Frequency in John Locke's Second Treatise",
+       x = "Words Used",
+       y = "Frequency") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+word_freq_plot_republic2 <- ggplot(word_freq_republic2, aes(x = reorder(word, n), y = n)) +
+  geom_col(fill = "steelblue") +
+  labs(title = "Word Frequency in W.E.B. Du Bois's Souls of Black Folk",
+       x = "Words Used",
+       y = "Frequency") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(word_freq_plot_republic)
+print(word_freq_plot_republic2)
+
+```
+
+## Part 2, Q2(b) Word Frequency Plot Interpretation
+
+In a couple of sentences, describe what the two word frequency plots show. What do they two word frequency plots tell us about the two books' subjet matters? What are the similaries and differences between the results? 
+
+_Words frequently used more than 100 times in "Second Treatise" have relations to social justice. However, in "Souls of Black Folk", as indicated in the book title, words meaning black people, such as black, negro were most frequently used.I do not see similarities in here, but they have definitely different thesis._
+
+
+## Part 2, Q3(a) Sentiment Analysis: Fear Word Graphs
+
+Now let's use the nrc dictionary to compare the top fear words in both texts. In the `r` chunk below, first create an `nrc_fear` object (we did this in lab). Then, create a graph showing the top 20 fear word from DuBois's *Souls of Black Folk*. Create another graph showing the top 20 fear word from Locke's *Second Treatise*. 
+
+```{r p2q3a, message = F}
+# code here
+nrc <- get_sentiments("nrc")
+
+nrc_fear <- get_sentiments("nrc") %>% 
+  filter(sentiment == "fear")
+
+republic_tibble %>%
+  inner_join(nrc_fear) %>%
+  count(word, sort = TRUE)
+
+republic_fear_plot <- republic_tibble %>%
+  inner_join(nrc_fear) %>%
+  count(word, sort = TRUE) %>% 
+  filter(n > 20) %>% 
+  mutate(word = reorder(word, n)) %>% 
+  ggplot(aes(n, word)) +
+  geom_col(fill = "skyblue") +
+  labs(y = NULL)
+
+print(republic_fear_plot)
+
+republic_tibble2 %>%
+  inner_join(nrc_fear) %>%
+  count(word, sort = TRUE)
+
+republic_fear_plot2 <- republic_tibble2 %>%
+  inner_join(nrc_fear) %>%
+  count(word, sort = TRUE) %>% 
+  filter(n > 20) %>% 
+  mutate(word = reorder(word, n)) %>% 
+  ggplot(aes(n, word)) +
+  geom_col(fill = "skyblue") +
+  labs(y = NULL)
+
+print(republic_fear_plot2)
+```
+
+## Part 2, Q3(b) Sentiment Analysis: Interpreting the Fear Words Graphs
+
+In a couple of sentences, describe what the two fear word graphs show. What do they tell us about the emotions the authors were trying to evoke? Theorize why we have found these differences.
+
+_The most frequently used fear word in "Second Treatise" was government while most used fear word in "Souls of Black Folk" was war. it shows "Souls of Black Folk" has much darker story, with frequently used fear words (war, slavery, slave, etc.) than "Second Treatise". "Souls of Black Folk" evoke readers of fear more than "Secod Treatise"._
+

@@ -1,0 +1,161 @@
+---
+title: "POL 390 Problem Set 2"
+author: "Benjamin Quan"
+date: "2023-06-11"
+output: html_document
+---
+**PS Q1**
+```{r setup, include=FALSE}
+
+#rm(list = ls())
+knitr::opts_chunk$set(echo = TRUE)
+getwd()
+setwd("/Users/hyunmyungchoi/study_R/POL390")
+library(ggplot2)
+library(tmap)
+library(leaflet)
+library(sf) # the base package manipulating shapes
+library(stringr)
+library(sp)
+library(tidyverse)
+library(dplyr)
+library(shiny)
+library(terra)
+library(dplyr)
+library(spData)
+library(spDataLarge)
+
+canada_election_history <- read.csv("http://www.lop.parl.gc.ca/Content/LOP/OpenData/HFER_e.csv")
+election_results_41st <- read.csv("2011_Canadian_Federal_Election_Results.csv")
+election_results_42nd <- read.csv("2015_Canadian_Federal_Election_Results.csv")
+election_results_43rd <- read.csv("2019_Canadian_Federal_Election_Results.csv")
+election_results_44th <- read.csv("2021_Canadian_Federal_Election_Results.csv")
+
+
+
+election_results_combined <- rbind(election_results_41st, election_results_42nd, election_results_43rd, election_results_44th)
+
+total_data_set <- merge.data.frame(canada_election_history, election_results_combined)
+
+head(total_data_set)
+summary(total_data_set)
+```
+
+```{r}
+#install.packages("geojsonio")
+library("geojsonio")
+library("rgdal")
+canada <- geojsonio::geojson_read("georef-canada-province@public.geojson", what = "sp")
+class(canada)
+
+
+
+
+m <- leaflet(canada) %>%
+  setView(-95.7129, 56.1304, 3) %>%
+  addProviderTiles("MapBox", options = providerTileOptions(
+    id = "mapbox.light",
+    accessToken = Sys.getenv('MAPBOX_ACCESS_TOKEN')))
+
+m %>% addPolygons(
+  weight = 2,
+  opacity = 1,
+  color = "darkgray",
+  dashArray = "5",
+  fillOpacity = 0.5,
+  highlightOptions = highlightOptions(
+    weight = 2,
+    color = "black",
+    dashArray = "1",
+    fillOpacity = 1,
+    bringToFront = TRUE))
+
+distinct2015 <- st_read(
+  "FED_CA_2_2_ENG.shp")
+distinct2019 <- st_read(
+  "FED_CA_2019_EN.shp")
+distinct2021 <- st_read(
+  "FED_CA_2021_EN.shp")
+
+st_geometry_type(distinct2015)
+st_geometry_type(distinct2019)
+st_geometry_type(distinct2021)
+
+st_crs(distinct2015)
+st_crs(distinct2019)
+st_crs(distinct2021)
+
+st_bbox(distinct2015)
+st_bbox(distinct2019)
+st_bbox(distinct2021)
+
+
+tm_shape(distinct2019) +
+  tm_polygons()
+
+m <- m %>%
+  addPolygons(data = distinct2015,
+              weight = 2,
+              opacity = 1,
+              color = "darkgray",
+              dashArray = "5",
+              fillOpacity = 0.5,
+              highlightOptions = highlightOptions(
+                weight = 2,
+                color = "black",
+                dashArray = "1",
+                fillOpacity = 1,
+                bringToFront = TRUE)) %>%
+  addPolygons(data = distinct2019,
+              weight = 2,
+              opacity = 1,
+              color = "darkgray",
+              dashArray = "5",
+              fillOpacity = 0.5,
+              highlightOptions = highlightOptions(
+                weight = 2,
+                color = "black",
+                dashArray = "1",
+                fillOpacity = 1,
+                bringToFront = TRUE)) %>%
+  addPolygons(data = distinct2021,
+              weight = 2,
+              opacity = 1,
+              color = "darkgray",
+              dashArray = "5",
+              fillOpacity = 0.5,
+              highlightOptions = highlightOptions(
+                weight = 2,
+                color = "black",
+                dashArray = "1",
+                fillOpacity = 1,
+                bringToFront = TRUE))
+
+m
+
+test <- sf::read_sf("FED_CA_2_2_ENG.shp") %>%
+  sf::st_transform('+proj=longlat +datum=WGS84')
+
+m <- leaflet(test) %>%
+  setView(-80, 35.8, 2.1) %>%
+  addProviderTiles("MapBox", options = providerTileOptions(
+    id = "mapbox.light",
+    accessToken = Sys.getenv('MAPBOX_ACCESS_TOKEN')))
+
+m %>% addPolygons(
+  data = eds_canada_2015,
+  weight = 2,
+  opacity = 1,
+  color = "darkgray",
+  dashArray = "5",
+  fillOpacity = 0.5,
+  highlightOptions = highlightOptions(
+    weight = 2,
+    color = "black",
+    dashArray = "1",
+    fillOpacity = 1,
+    bringToFront = TRUE))
+test <- sf::read_sf("FED_CA_2_2_ENG.shp") %>%
+  sf::st_transform('+proj=longlat +datum=WGS84')
+
+```

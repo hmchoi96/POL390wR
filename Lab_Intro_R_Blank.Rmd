@@ -55,6 +55,7 @@ R is an object-oriented language. This means you store and manipulate objects wi
 Let's practice creating objects together!
 ```{r objects-prof}
 
+
 # Assign the value of 1 to an object called object_a
 object_a <- 1
 

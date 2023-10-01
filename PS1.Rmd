@@ -1,6 +1,6 @@
 ---
 title: "POL390 Problem Set 1"
-author: ""
+author: "Choi Hyun Myung, 301353277"
 output: pdf_document
 ---
 
@@ -22,27 +22,54 @@ The goal of most feminists is to achieve gender equality. We're curious to know 
 In the R chunk below, create a graph showing the distribution of gender (5 points):
 
 ```{r p1q1a}
+getwd()
+setwd("/Users/hyunmyungchoi/study_R/POL390")
+library("haven")
+library("ggplot2")
+library("tidyverse")
 
 # code here
+data <- read_dta("ces2019_ps1.dta")
+summary(data$gender)
+#glimpse(data$gender)
 
+data$gender <- factor(data$gender, labels=c("Man", "Woman"), levels=c(1,2))
+ggplot(data, aes(x=gender, y = (after_stat(count)/sum(after_stat(count))*100))) +
+  labs(x = "Gender", y="Distribution of Gender(%)") +
+  geom_bar(fill="skyblue", color="white") +
+  theme(aspect.ratio = 1,
+        axis.title = element_text(size= 14),
+        axis.text.x = element_text(size = 12))
 ```
 
 ## Problem 1 Question 1 (b)
 Based on what you learned in class, explain why you chose this type of graph and what elements you added to make it attractive/useful (5 points):
 
+Using ggplot2, I used bar chart to see the distribution of the gender because of clear representation and easy comparison. It also enables better simplicity and readability. I filled the color of the graph with skyblue color for better readability than the grey color. I set aspect ratio to 1 to make it more attractive. 
 
 ## Problem 1 Question 2 (a)
 Now create a graph showing the distribution of feelings toward the feminist movement (it can be any of the graphs we learned in class) for the entire sample. Make sure your graph shows the measures of central tendency (i.e., the mean and the median) (7 points): 
 
 ```{r p1q2a}
 
-# code here
+# Create a data frame with the variable
+summary(data$feel_feminists)
+
+# Create a box plot
+data %>% 
+  ggplot(aes(x = "Feeling", y = feel_feminists)) +
+  geom_violin() +
+  labs(x = "Feeling towards the feminist movement", y = "0 to 100") +
+  stat_summary(fun = mean, geom = "point", shape = 20, color = "red", size = 3) +
+  stat_summary(fun = median, geom = "point", shape = 8, color = "blue", size = 3)
+
+
 
 ```
 
 ## Problem 1 Question 2 (b)
 Interpret the graph. What does it say about the distributions of feelings toward feminists in Canada? (3 points):
-
+Highest response is at 50 meaning they are neither like nor dislike the feminism. However there are definitely more responses liking the moment than responses who dislike.
 
 ## Problem 1 Question 3 (a) 
 Now show the distribution of feelings toward feminists by gender (separately for men and for women) in Canada. Use the graph that you think is best for showing the distribution of feelings toward feminists by gender (7 points): 
@@ -51,14 +78,25 @@ Now show the distribution of feelings toward feminists by gender (separately for
 
 # code here
 
+data %>% 
+  ggplot(aes(x = gender, y = feel_feminists)) +
+  geom_violin() +
+  labs(x = "Feeling towards the feminist movement", y = "0 to 100") +
+  stat_summary(fun = mean, geom = "point", shape = 20, color = "red", size = 3) +
+  stat_summary(fun = median, geom = "point", shape = 8, color = "blue", size = 3)
+
+
 ```
 
 ## Problem 1 Question 3 (b) 
 Explain why you chose that graph. Why is the graph you chose the best way to display the information? (3 points):
 
+Violin plot shows the best display for feeling of each gender towards feminism because it provides better group comparison and enable to show central tendency. 
+
 ## Problem 1 Question 3 (c) 
 Interpret the graph: What does it say about feelings toward feminists among men and among women? Is there a difference? Offer an explanation for why this might be this be the case (5 points).
 
+Undoubtfully women show more interest on feminism than men. Both mean and median are above 50 in women's feeling response while the central tendency is at 50 in man's graph. This is because firstly feminism is directly related to woman's right and there are belief that gender equality is needed among women more than men.
 
 # Problem 2: "Shy" Conservatives and Post-Material Politics
 
@@ -87,18 +125,16 @@ Just as some background context: the two most common electoral systems are calle
 Alternative for Germany (AfD) is a far-right populist party associated with Neo-Nazi positions. The Green Party is a progressive environmentalist party. Both of these parties have experienced a relevant increase in their vote shares in the last elections. Load the `results_germany_2017.csv` dataset which has the results (the “truth”) for the 2017 German election. To load the dataset use read.csv funtion. To correctly display this dataset you will need to set the encoding to UTF-8 and the separator to ";". I have given you the code below:
 
 ``` {r p2q1, message=F, warning=F} 
-ger_election <- read.csv("/Users/edanabeauvais/Documents/SFU Undergrad Teaching/2022 Summer/Problem Sets/PS1/PS1 Solutions/results_germany_2017.csv",
-encoding = "UTF-8", sep = ";")
+ger_election <- read.csv("results_germany_2017.csv", encoding = "UTF-8", sep = ";")
 
-subset(ger_election,
-party_name %in% c("Alternative for Germany (AFD)", "The Greens"))
+subset(ger_election, party_name %in% c("Alternative for Germany (AFD)", "The Greens"))
 
 
 ```
 
 ## Problem 2 Question 1
 Looking at the table in the R chunk above, what was the percentage of ACTUAL votes for the AfD and The Greens in the First and Second votes? (4 points)
-
+AFD in the first round received 11.5 percent and in the second round, AFD received 12.6%. The Greens received 8% in the first round and 8.9% in the second round.
 
 Since the ESS is a large representative sample, the survey should reflect the population (above) and so the distribution of vote intention in the survey should be pretty close to the actual results from the national election (the results that we saw above). 
 
@@ -109,7 +145,7 @@ Then we will need to create a table adding a column with the estimated (ESS data
 I have done all this coding for you so that you can focus on graphing. Before you create your graph, make sure you run this line of code:
 ``` {r p2, message=F, warning=F, include = F} 
 # Load the ESS survey data:
-ger_survey <- read.csv("/Users/edanabeauvais/Documents/SFU Undergrad Teaching/2022 Summer/Problem Sets/PS1/PS1 Solutions/ESS_Germany_2018.csv")
+ger_survey <- read.csv("ESS_Germany_2018.csv")
 
 # Create two tables:
 tab_v1 <- data.frame(prop.table(table(ger_survey$prtvede1))*100)
@@ -140,13 +176,26 @@ Using the table `tab_votes` (created in the R chunk above), create a barplot sho
 ```{r p2q2}
 
 # Code here
+tab_votes$rankOrder <- rank(-tab_votes$vote1_perc)
+topFive <- subset(tab_votes, rankOrder <= 5)
 
+barplot <- ggplot(topFive, aes(x = party_name)) +
+  geom_bar(aes(y = survey_v1, fill = "Survey Percentage", width=0.6), stat = "identity", position = "dodge") +
+  geom_bar(aes(y = vote1_perc, fill = "Actual Percentage", width=0.3), stat = "identity", position = "dodge") +
+  labs(x = "Party", y = "Percentage") +
+  scale_fill_manual(values = c("blue", "red"), labels = c("Actual Percentage", "Survey Percentage")) +
+  theme(aspect.ratio = 0.5)
+print(barplot)
 ```
 
 ## Problem 2 Question 3
 What do you conclude? Which party benefits the most from people "lying"? Which one do voters seem to feel more "ashamed" of saying that they voted for? Are German progressive voters "lazy" and right-wing voters "shy"? 
 
 Note that by "benefit" I mean a higher vote share reported in surveys (a lower actual vote share). It's a benefit in the sense that it makes the party look more popular in surveys than it is in reality. I've use quotation mark to show that this might mislead the party’s campaign and so might not be an actual benefit. (6 points)
+
+The party benefits the most from people 'lying' meaning survey rate is larger than the actual vote is 'The Greens'. 
+The party benefits the most from people felt 'ashamed' of saying meaning actual percentage is larger than survey vote percentage is 'Alternative for Germany'. 
+We can conclude German progressive voters are lazy and right-wing voters are shy.
 
 
 # Problem 3: Post-Materialist Values 
@@ -174,11 +223,24 @@ Create a histogram or density plot with the age of the voters of the AfD and Gre
 ``` {r p3q1, message=F, warning=F} 
 
 # Code here
+glimpse(afd_gr)
 
+voteforAFD <- subset(afd_gr, prtvede1 == "Alternative for Germany (AFD)")
+voteforGreen <- subset(afd_gr, prtvede1 == "The Greens")
+
+ageforAFD <- voteforAFD$agea
+ageforGreen <- voteforGreen$agea
+
+ggplot() +
+  geom_histogram(data = voteforAFD, aes(x = agea, fill = "AfD"), color = "red", alpha = 0.4) +
+  geom_histogram(data = voteforGreen, aes(x = agea, fill = "Green"), color = "green", alpha = 0.2) +
+  labs(title = "Age Distribution of AfD and Green Party Voters", x="Age", y="Frequency") +
+  scale_fill_manual(values = c("AfD" = "red", "Green" = "green")) +
+  theme(aspect.ratio = 1)
 ```
 
 ## Problem 3 Question 2
 
 Interpret your graph. Does your graph show evidence of the Inglehart and Norris post-materialist thesis? Why or why not? (5 points)
-
+This graph show the evidence of the post-materialist thesis at some point although gender is now shown in the graph. The Green, one of progresive parties, is relatively right skewed while AFD is left skewed. That is, The green has relatively younger voters while AFD has relatively older voters.This proves the post-materialist thesis. 
 

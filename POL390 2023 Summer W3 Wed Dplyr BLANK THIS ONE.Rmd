@@ -1,8 +1,10 @@
 ---
 title: "POL390 Data Wrangling with the `dplyr` Package"
 author: "Isadora Borges Monroy"
-output: html_document
-editor_options: 
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
   chunk_output_type: console
 ---
 
@@ -109,7 +111,7 @@ minidat$Vote2020 <- minidat$Vote2020 %>% as_factor() #as_factor instead of as.fa
 minidat$Vote2016 <- minidat$Vote2016 %>% recode_factor("1" = "HClinton", "2" = "Trump",
                               .default = NA_character_) #all the other candidates don't matter to us.
   
-glimpse(minidat) #Check your changes are saving.
+#glimpse(minidat) #Check your changes are saving.
 ```
 
 
@@ -139,18 +141,19 @@ minidat$FeelingBiden %>% summary()
 
 #Note the unusual values. 
 #From the codebook: 998. Don’t know (don’t know where to rate), -9. Refused and -4. Technical error
-if_else(minidat$FeelingBiden < 0 | minidat$FeelingBiden > 100, true= NA_real_, false = minidat$FeelingBiden)%>% summary()
+#if_else(minidat$FeelingBiden < 0 | minidat$FeelingBiden > 100, true= NA_real_, false = minidat$FeelingBiden)%>% summary()
 
 
 #this looks better. 
 #Let's assign that code to itself, remember to take out the summary pipe 
-minidat$FeelingBiden <- if_else(minidat$FeelingBiden<0 | minidat$FeelingBiden>100, NA_real_, minidat$FeelingBiden)
+#minidat$FeelingBiden <- if_else(minidat$FeelingBiden<0 | minidat$FeelingBiden>100, NA_real_, minidat$FeelingBiden)
 
 #Now look at the Trump rating. 
  #Don't know where to rate is gone, we only have people who refuse to say! 
-minidat$FeelingTrump %>% summary()
-minidat$FeelingTrump %>%  if_else(minidat$FeelingTrump<0 | minidat$FeelingTrump>100, NA_real_, minidat$FeelingTrump) 
+#minidat$FeelingTrump %>% summary()
+#minidat$FeelingTrump %>%  if_else(minidat$FeelingTrump<0 | minidat$FeelingTrump>100, NA_real_, minidat$FeelingTrump) 
 glimpse(minidat)
+
 
 ```
 
@@ -240,7 +243,7 @@ minidat %>% filter(race %in% c("Black", "Hispanic")) %>%
 
 #Add white voters to the race filter and change the color/fill to display the 2020 vote
 ```{r}
-TrumpRate <- minidat %>% filter(race %in% (Vote2020) %>% 
+TrumpRate <- minidat %>% filter(race %in% (Vote2020)) %>% 
   ggplot(aes(x = Vote2020, y = FeelingTrump, color = Vote2020, fill = Vote2020))+
   geom_violin() +
   scale_color_brewer(palette="Dark2")+
@@ -281,16 +284,11 @@ TrumpRate <- minidat %>% drop_na(Vote2020) %>%
     #We can also calculate the difference in ratings between Trump and Biden in mutate
     #Call it `Thermometer difference`, and calculate so positive Trump<Biden, negative means Biden>Trump
 
-  #To calculate the average difference for the category of voter, use group and group_modify
- #.x is used to tell it to use the result of the previous function (group_by(Votes))
-  
   #group_modify(~ mean_se(.x$`Thermometer difference`) %>% abs) %>%  #we can turn the calculation into an absolute value.
 
 #Let's plot these differences using another recoding function called case_when. 
 #We can add a pipe or we can save as a table and feed it into ggplot. 
 #Pick one and try to output the plot:
-
-
 
 
 #Remember to save your work!

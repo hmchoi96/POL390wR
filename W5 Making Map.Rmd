@@ -1,0 +1,112 @@
+---
+title: "W5 making map"
+output: pdf_document
+date: "2023-06-05"
+---
+
+```{r}
+library(sf)
+library(terra)
+library(dplyr)
+library(spData)
+library(spDataLarge)
+
+library(tmap)    # for static and interactive maps
+library(leaflet) # for interactive maps
+library(ggplot2) # tidyverse data visualization package
+nz_elev = rast(system.file("raster/nz_elev.tif", package = "spDataLarge"))
+
+tm_shape(nz) + 
+  #tm_fill() +             # either function has to be called
+  #tm_borders() +
+  tm_dots() +
+  tm_polygons()   # fill & borders condensed
+
+
+map_nz= tm_shape(nz) + tm_polygons()
+class(map_nz)
+
+map_nz1 = map_nz +
+  tm_shape(nz_elev) +  ## nz_elev = average elevation across NZ
+  tm_raster(alpha=0.7)
+
+nz_water = st_union(nz) |> st_buffer(22200) |>   ##NZ's territorial water
+  st_cast(to = "LINESTRING")
+map_nz2 = map_nz1 + 
+  tm_shape(nz_water) + tm_lines()
+
+map_nz3 = map_nz2 +
+  tm_shape(nz_height) + tm_dots()
+
+tmap_arrange(map_nz1, map_nz2, map_nz3)  ## display maps together
+
+ma1 = tm_shape(nz) + tm_fill(col = "red")                 #fill color red
+ma2 = tm_shape(nz) + tm_fill(col = "red", alpha = 0.3)    #fill color red with 0.3 alpha
+ma3 = tm_shape(nz) + tm_borders(col = "blue")             #border line color blue
+ma4 = tm_shape(nz) + tm_borders(lwd = 3)                  # line witdh 3
+ma5 = tm_shape(nz) + tm_borders(lty = 2)                  # dot line
+ma6 = tm_shape(nz) + tm_fill(col = "red", alpha = 0.3) +  
+  tm_borders(col = "blue", lwd = 3, lty = 2)
+tmap_arrange(ma1, ma2, ma3, ma4, ma5, ma6)
+
+tm_shape(nz) + tm_fill(col = "Land_area")
+
+legend_title = expression("Area (km"^2*")")
+map_nza = tm_shape(nz) +
+  tm_fill(col = "Land_area", title = legend_title) + tm_borders()
+
+tm_shape(nz) + tm_polygons(col = "Median_income")
+breaks = c(0, 3, 4, 5) * 10000
+tm_shape(nz) + tm_polygons(col = "Median_income", breaks = breaks)
+tm_shape(nz) + tm_polygons(col = "Median_income", n = 10)
+tm_shape(nz) + tm_polygons(col = "Median_income", palette = "BuGn")
+```
+style = "pretty",
+the default setting, rounds breaks into whole numbers where possible and spaces them evenly;
+style = "equal"
+divides input values into bins of equal range and is appropriate for variables with a uniform distribution (not recommended for variables with a skewed distribution as the resulting map may end-up having little color diversity);
+style = "quantile" 
+ensures the same number of observations fall into each category (with the potential downside that bin ranges can vary widely);
+style = "jenks"
+identifies groups of similar values in the data and maximizes the differences between categories;
+style = "cont" 
+(and "order") present a large number of colors over continuous color fields and are particularly suited for continuous rasters ("order" can help visualize skewed distributions);
+style = "cat" 
+was designed to represent categorical values and assures that each category receives a unique color.
+```{r}
+tm_shape(nz) + tm_polygons("Population", palette = "Blues")
+tm_shape(nz) + tm_polygons("Population", palette = "YlOrBr")
+
+map_nz + 
+  tm_compass(type = "8star", position = c("left", "top")) +
+  tm_scale_bar(breaks = c(0, 100, 200), text.size = 1)
+
+map_nz + tm_layout(title = "New Zealand")
+map_nz + tm_layout(scale = 5)
+map_nz + tm_layout(bg.color = "lightblue")
+map_nz + tm_layout(frame = FALSE)
+```
+Frame width (frame.lwd) and an option to allow double lines (frame.double.line)
+Margin settings including outer.margin and inner.margin
+Font settings controlled by fontface and fontfamily
+Legend settings including binary options such as legend.show (whether or not to show the legend) legend.only (omit the map) and legend.outside (should the legend go outside the map?), as well as multiple choice settings such as legend.position
+Default colors of aesthetic layers (aes.color), map attributes such as the frame (attr.color)
+Color settings controlling sepia.intensity (how yellowy the map looks) and saturation (a color-grayscale)
+```{r}
+## high level style
+map_nza + tm_style("bw")
+map_nza + tm_style("classic")
+map_nza + tm_style("cobalt")
+map_nza + tm_style("col_blind")
+
+#tmap_style_catalogue()
+
+urb_1970_2030 = urban_agglomerations |> 
+  filter(year %in% c(1970, 1990, 2010, 2030))
+
+tm_shape(world) +
+  tm_polygons() +
+  tm_shape(urb_1970_2030) +
+  tm_symbols(col = "black", border.col = "white", size = "population_millions") +
+  tm_facets(by = "year", nrow = 2, free.coords = FALSE)
+```

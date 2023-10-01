@@ -1,0 +1,111 @@
+---
+title: "POL390 Lab 9 BLANK"
+output:
+  pdf_document: default
+  html_document: default
+---
+In this lab we will learn about cluster analysis. Both the professor's example and student practice will make use of the DW NOMINATE scores. American researchers use a scaling technique called DW NOMINATE to assign "ideology scores" to elected representatives in the American legislature (the U.S. House of Representatives) based on how the representatives voted in the legislature. The main ideological dimension is economic left/right, and the second dimension is a kind of cultural conflict/ racial attitudes. Don't worry about the details of the DW NOMINATE scores, just know that it's based on representatives' actual voting and measures two dimensions of ideology.
+
+Question: Using just these scale scores, can we identify ``types" or clusters of representatives?
+We'll look at how the partisanship scores of representatives in the 80th Congress (1947--1949) cluster and how representatives from the 120th Congress (2011--2013) cluster. The professor will specify two clusters and the students will specify four clusters.
+
+# Preliminary stuff (run this first) 
+Before we get started, download the textbook package (this line of code: `install_github("kosukeimai/qss-package", build_vignettes = TRUE)`) and run the chunk below.
+```{r prelim, message = FALSE}
+library("devtools")
+#install_github("kosukeimai/qss-package", build_vignettes = TRUE)
+# congress <- data set, 
+data(congress, package = "qss")
+
+rep <- subset(congress, subset = (party == "Republican"))
+dem <- congress[congress$party == "Democrat", ] # another way to subset
+## 80th and 112th Congress
+rep80 <- subset(rep, subset = (congress == 80))
+dem80 <- subset(dem, subset = (congress == 80))
+rep112 <- subset(rep, subset = (congress == 112))
+dem112 <- subset(dem, subset = (congress == 112))
+
+## preparing the labels and axis limits to avoid repetition
+xlab <- "Economic liberalism/conservatism"
+ylab <- "Racial liberalism/conservatism"
+lim <- c(-1.5, 1.5)
+
+
+dwnom80 <- cbind(congress$dwnom1[congress$congress == 80],
+congress$dwnom2[congress$congress == 80])
+dwnom112 <- cbind(congress$dwnom1[congress$congress == 112],
+congress$dwnom2[congress$congress == 112])
+```
+
+
+# K-Means Clustering
+## Professor example:
+I will first do k-means clustering with two clusters. We'll also take a look at the results.
+```{r, prof-kmeans, message = FALSE}
+## k-means with 2 clusters:
+# 80th Congress
+# due to diminishing return, usually use nstart = 5
+k80two.out <- kmeans(dwnom80, centers = 2, nstart = 5)
+# 112th Congress
+k112two.out <- kmeans(dwnom112, centers = 2, nstart = 5)
+
+names(k112two.out)
+## final centroids
+k80two.out$cluster
+k80two.out$centers
+
+## number of observations for each cluster by party
+table(party = congress$party[congress$congress == 80], cluster = k80two.out$cluster)
+
+table(party = congress$party[congress$congress == 112], cluster = k112two.out$cluster)
+
+```
+
+# Student practice
+Now it's your turn! Except this time, run the k-means clustering algorithm with four clusters. Take a look at the results.
+```{r, student-kmeans, message = FALSE}
+## k-means with 4 clusters:
+k80four.out <- kmeans(dwnom80, centers = 4, nstart = 5)
+k112four.out <- kmeans(dwnom112, centers = 4, nstart = 5)
+
+## final centroids
+k80four.out$cluster
+k80four.out$centers
+## number of observations for each cluster by party
+table(party = congress$party[congress$congress == 80], cluster = k80four.out$cluster)
+
+table(party = congress$party[congress$congress == 112], cluster = k112four.out$cluster)
+
+```
+
+
+
+# Plots
+## Professor example:
+Now I will visually graph and interpret the results.
+```{r, prof-plots, message = FALSE}
+## plotting the results using the labels and limits defined earlier
+plot(dwnom80, col = k80two.out$cluster+ 1, xlab = xlab, ylab = ylab, xlim = lim, ylim = lim, main = "80th Congress")
+## plotting the centroids
+points(k80two.out$centers, pch = 8, cex = 2)
+
+## 112th Congress
+plot(dwnom112, col = k112two.out$cluster+ 1, xlab = xlab, ylab = ylab, xlim = lim, ylim = lim, main = "112th Congress")
+points(k112two.out$centers, pch = 8, cex = 2)
+
+```
+
+
+## Student practice:
+Now it's your turn! Visually graph and interpret your results. We'll discuss as a class.
+```{r, student-plots, message = FALSE}
+## plotting the results using the labels and limits defined earlier
+plot(dwnom80, col = k80four.out$cluster+ 1, xlab = xlab, ylab = ylab, xlim = lim, ylim = lim, main = "80th Congress")
+points(k80four.out$centers, pch = 8, cex = 2)
+
+## plotting the centroids
+
+## 112th Congress
+plot(dwnom112, col = k112four.out$cluster+ 1, xlab = xlab, ylab = ylab, xlim = lim, ylim = lim, main = "112th Congress")
+points(k112four.out$centers, pch = 8, cex = 2)
+```
